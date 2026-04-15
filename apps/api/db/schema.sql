@@ -8,131 +8,225 @@ create table if not exists users (
   updated_at text not null
 );
 
-create table if not exists tasks (
+create table if not exists table_assets (
+  id text primary key,
+  table_name text not null unique,
+  display_name text not null,
+  domain_code text,
+  description text,
+  risk_level text not null,
+  owner_user_id text,
+  status text not null,
+  current_version_id text,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (owner_user_id) references users(id)
+);
+
+create table if not exists observation_points (
+  id text primary key,
+  table_asset_id text not null,
+  name text not null,
+  metric_code text not null,
+  metric_name text not null,
+  aggregation_expr text not null,
+  time_grain text not null,
+  dimension_json text not null,
+  filter_json text not null,
+  scene_tags_json text not null,
+  status text not null,
+  git_path text not null,
+  version_no integer not null,
+  created_by text not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (created_by) references users(id)
+);
+
+create table if not exists test_cases (
+  id text primary key,
+  table_asset_id text not null,
+  name text not null,
+  test_case_type text not null,
+  logic_desc text not null,
+  threshold_desc text,
+  sql_template text not null,
+  supports_one_service integer not null,
+  supports_dqc integer not null,
+  one_service_parser text,
+  dqc_template_type text,
+  risk_level text not null,
+  status text not null,
+  git_path text not null,
+  version_no integer not null,
+  created_by text not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (created_by) references users(id)
+);
+
+create table if not exists business_rules (
+  id text primary key,
+  table_asset_id text not null,
+  name text not null,
+  semantic_desc text not null,
+  applicable_scope text,
+  exception_scope text,
+  common_causes text,
+  analysis_hint text,
+  status text not null,
+  git_path text not null,
+  version_no integer not null,
+  created_by text not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (created_by) references users(id)
+);
+
+create table if not exists test_case_observation_links (
+  id text primary key,
+  test_case_id text not null,
+  observation_id text not null,
+  created_at text not null,
+  foreign key (test_case_id) references test_cases(id),
+  foreign key (observation_id) references observation_points(id)
+);
+
+create table if not exists business_rule_observation_links (
+  id text primary key,
+  business_rule_id text not null,
+  observation_id text not null,
+  created_at text not null,
+  foreign key (business_rule_id) references business_rules(id),
+  foreign key (observation_id) references observation_points(id)
+);
+
+create table if not exists business_rule_test_case_links (
+  id text primary key,
+  business_rule_id text not null,
+  test_case_id text not null,
+  created_at text not null,
+  foreign key (business_rule_id) references business_rules(id),
+  foreign key (test_case_id) references test_cases(id)
+);
+
+create table if not exists dqc_deployments (
+  id text primary key,
+  table_asset_id text not null,
+  test_case_id text not null,
+  dqc_rule_type text not null,
+  monitor_name text not null,
+  monitor_object text not null,
+  monitor_field text,
+  pre_sql text,
+  condition_expr text not null,
+  schedule_cycle text,
+  schedule_time text,
+  alert_level text,
+  receivers_json text,
+  dqc_rule_id text,
+  publish_status text not null,
+  last_synced_at text,
+  git_path text not null,
+  version_no integer not null,
+  created_at text not null,
+  updated_at text not null,
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (test_case_id) references test_cases(id)
+);
+
+create table if not exists manual_runs (
   id text primary key,
   title text not null,
   scene text not null,
-  target_table text not null,
+  table_ids_json text not null,
+  metric_codes_json text not null,
   requirement_desc text not null,
   change_desc text not null,
   business_date_start text not null,
   business_date_end text not null,
   executor_user_id text not null,
-  pm_user_id text not null,
   status text not null,
-  extra_sql text,
-  has_pending_feedback integer not null default 0,
-  last_run_at text,
-  created_by text not null,
-  updated_by text not null,
   created_at text not null,
-  updated_at text not null
+  updated_at text not null,
+  foreign key (executor_user_id) references users(id)
 );
 
-create table if not exists task_metrics (
+create table if not exists manual_run_selected_test_cases (
   id text primary key,
-  task_id text not null,
-  metric_code text not null,
-  metric_name text not null,
-  sort_order integer not null,
+  manual_run_id text not null,
+  test_case_id text not null,
+  selected integer not null,
   created_at text not null,
-  foreign key (task_id) references tasks(id)
+  foreign key (manual_run_id) references manual_runs(id),
+  foreign key (test_case_id) references test_cases(id)
 );
 
-create table if not exists task_scope_confirmations (
+create table if not exists manual_run_batches (
   id text primary key,
-  task_id text not null,
-  implementation_id text not null,
-  confirmed_by text not null,
-  confirmed_role text not null,
-  comment text not null,
-  created_at text not null,
-  foreign key (task_id) references tasks(id)
-);
-
-create table if not exists task_runs (
-  id text primary key,
-  task_id text not null,
-  run_no integer not null,
-  scene text not null,
+  manual_run_id text not null,
+  one_service_request_id text,
   status text not null,
+  triggered_by text not null,
   started_at text,
   finished_at text,
-  triggered_by text not null,
-  stale_reason text,
+  error_message text,
   created_at text not null,
-  foreign key (task_id) references tasks(id)
+  foreign key (manual_run_id) references manual_runs(id),
+  foreign key (triggered_by) references users(id)
 );
 
-create table if not exists task_run_checks (
+create table if not exists manual_run_sql_jobs (
   id text primary key,
-  run_id text not null,
-  level text not null,
-  metric_code text,
-  check_type text not null,
-  rule_id text,
-  risk_level text not null,
-  status text not null,
-  finding_summary text,
-  impact_scope text,
-  evidence_json text not null,
-  sort_score real not null default 0,
-  created_at text not null,
-  foreign key (run_id) references task_runs(id)
-);
-
-create table if not exists task_run_sql_executions (
-  id text primary key,
-  run_id text not null,
-  check_id text,
-  sql_type text not null,
-  sql_summary text not null,
+  batch_id text not null,
+  test_case_id text not null,
   sql_text text not null,
-  submitted_by text not null,
+  sql_summary text not null,
   execution_status text not null,
   result_row_count integer,
-  one_service_job_id text,
+  raw_result_json text,
+  parsed_result_json text,
   started_at text,
   finished_at text,
   error_message text,
   created_at text not null,
-  foreign key (run_id) references task_runs(id)
+  foreign key (batch_id) references manual_run_batches(id),
+  foreign key (test_case_id) references test_cases(id)
 );
 
-create table if not exists task_run_dqc_packages (
+create table if not exists manual_run_findings (
   id text primary key,
-  run_id text not null,
-  package_version integer not null,
-  package_json text not null,
-  generated_by text not null,
+  batch_id text not null,
+  table_asset_id text not null,
+  test_case_id text not null,
+  business_rule_id text,
+  result_status text not null,
+  finding_summary text not null,
+  abnormal_dimensions_json text,
+  evidence_json text not null,
+  one_service_summary text,
+  sort_score real not null default 0,
   created_at text not null,
-  foreign key (run_id) references task_runs(id)
-);
-
-create table if not exists task_run_dqc_executions (
-  id text primary key,
-  run_id text not null,
-  package_id text not null,
-  dqc_request_id text,
-  execution_status text not null,
-  result_summary_json text,
-  started_at text,
-  finished_at text,
-  error_message text,
-  created_at text not null,
-  foreign key (run_id) references task_runs(id)
+  foreign key (batch_id) references manual_run_batches(id),
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (test_case_id) references test_cases(id),
+  foreign key (business_rule_id) references business_rules(id)
 );
 
 create table if not exists feedback_batches (
   id text primary key,
-  task_id text not null,
-  run_id text not null,
+  manual_run_id text not null,
   reason text not null,
-  applicable_scene text not null,
-  confirmed_by text not null,
+  applicable_scenes_json text not null,
   status text not null,
+  confirmed_by text,
   created_at text not null,
-  foreign key (task_id) references tasks(id)
+  confirmed_at text,
+  foreign key (manual_run_id) references manual_runs(id),
+  foreign key (confirmed_by) references users(id)
 );
 
 create table if not exists feedback_batch_items (
@@ -146,120 +240,87 @@ create table if not exists feedback_batch_items (
   foreign key (batch_id) references feedback_batches(id)
 );
 
-create table if not exists knowledge_cards (
+create table if not exists dqc_publish_tasks (
   id text primary key,
-  card_type text not null,
-  metric_code text not null,
-  metric_name text not null,
-  table_name text not null,
-  business_grain text not null,
-  business_definition text not null,
-  dimension_json text not null,
+  title text not null,
+  table_ids_json text not null,
   status text not null,
-  owner_user_id text,
-  current_version_id text,
   created_by text not null,
   created_at text not null,
-  updated_at text not null
+  updated_at text not null,
+  foreign key (created_by) references users(id)
 );
 
-create table if not exists knowledge_card_versions (
+create table if not exists dqc_publish_diffs (
   id text primary key,
-  card_id text not null,
+  publish_task_id text not null,
+  table_asset_id text not null,
+  test_case_id text not null,
+  current_dqc_status text not null,
+  suggested_action text not null,
+  reason text not null,
+  selected integer not null default 0,
+  created_at text not null,
+  foreign key (publish_task_id) references dqc_publish_tasks(id),
+  foreign key (table_asset_id) references table_assets(id),
+  foreign key (test_case_id) references test_cases(id)
+);
+
+create table if not exists git_versions (
+  id text primary key,
+  commit_sha text not null,
+  commit_message text not null,
+  author_user_id text not null,
+  related_object_type text not null,
+  related_object_id text not null,
   version_no integer not null,
-  create_mode text not null,
-  snapshot_json text not null,
-  reason text,
-  applicable_scene text,
-  created_by text not null,
   created_at text not null,
-  foreign key (card_id) references knowledge_cards(id)
+  foreign key (author_user_id) references users(id)
 );
 
-create table if not exists knowledge_rules (
+create table if not exists git_change_items (
   id text primary key,
-  card_id text not null,
-  name text not null,
-  rule_type text not null,
-  check_object text not null,
-  logic_desc text not null,
-  threshold_desc text,
-  risk_level text not null,
-  rule_level text not null,
-  trigger_condition text not null,
-  sql_template text,
-  dqc_template_json text,
-  is_active integer not null default 1,
+  git_version_id text not null,
+  file_path text not null,
+  change_type text not null,
+  diff_summary text,
   created_at text not null,
-  updated_at text not null,
-  foreign key (card_id) references knowledge_cards(id)
-);
-
-create table if not exists knowledge_anomaly_patterns (
-  id text primary key,
-  card_id text not null,
-  pattern_name text not null,
-  pattern_desc text not null,
-  evidence_example text,
-  handling_method text,
-  created_at text not null,
-  updated_at text not null,
-  foreign key (card_id) references knowledge_cards(id)
-);
-
-create table if not exists knowledge_scope_implementations (
-  id text primary key,
-  card_id text not null,
-  sql_source text not null,
-  is_standard integer not null default 0,
-  conflict_desc text,
-  effective_from text,
-  effective_to text,
-  confirmed_comment text,
-  created_at text not null,
-  updated_at text not null,
-  foreign key (card_id) references knowledge_cards(id)
-);
-
-create table if not exists knowledge_rollbacks (
-  id text primary key,
-  entity_type text not null,
-  entity_id text not null,
-  from_version_id text not null,
-  to_version_id text not null,
-  rollback_by text not null,
-  rollback_reason text,
-  created_at text not null
+  foreign key (git_version_id) references git_versions(id)
 );
 
 create table if not exists notifications (
   id text primary key,
   user_id text not null,
-  task_id text,
-  type text not null,
+  notification_type text not null,
   title text not null,
   content text not null,
-  status text not null,
+  related_object_type text,
+  related_object_id text,
+  read_at text,
   created_at text not null,
-  read_at text
+  foreign key (user_id) references users(id)
 );
 
 create table if not exists audit_logs (
   id text primary key,
-  entity_type text not null,
-  entity_id text not null,
-  action text not null,
-  operator_user_id text not null,
-  operator_role text not null,
-  detail_json text not null,
-  created_at text not null
+  actor_user_id text not null,
+  action_type text not null,
+  target_type text not null,
+  target_id text not null,
+  payload_json text not null,
+  created_at text not null,
+  foreign key (actor_user_id) references users(id)
 );
 
-create index if not exists idx_tasks_scene_status on tasks(scene, status);
-create index if not exists idx_task_metrics_task on task_metrics(task_id, metric_code);
-create index if not exists idx_task_runs_task on task_runs(task_id, run_no desc);
-create index if not exists idx_task_run_checks_run on task_run_checks(run_id, metric_code, risk_level, status);
-create index if not exists idx_knowledge_cards_table_metric on knowledge_cards(table_name, metric_code, status);
-create index if not exists idx_knowledge_rules_card on knowledge_rules(card_id, is_active);
-create index if not exists idx_notifications_user on notifications(user_id, status, created_at desc);
-create index if not exists idx_audit_logs_entity on audit_logs(entity_type, entity_id, created_at desc);
+create index if not exists idx_table_assets_name on table_assets(table_name);
+create index if not exists idx_table_assets_owner on table_assets(owner_user_id, risk_level);
+create index if not exists idx_observation_points_table on observation_points(table_asset_id, metric_code);
+create index if not exists idx_test_cases_table on test_cases(table_asset_id, test_case_type, risk_level);
+create index if not exists idx_business_rules_table on business_rules(table_asset_id);
+create index if not exists idx_dqc_deployments_table on dqc_deployments(table_asset_id, publish_status);
+create index if not exists idx_manual_runs_status on manual_runs(status, scene);
+create index if not exists idx_manual_run_batches_run on manual_run_batches(manual_run_id, created_at desc);
+create index if not exists idx_manual_run_findings_batch on manual_run_findings(batch_id, result_status, sort_score desc);
+create index if not exists idx_dqc_publish_diffs_task on dqc_publish_diffs(publish_task_id, suggested_action);
+create index if not exists idx_git_versions_object on git_versions(related_object_type, related_object_id, created_at desc);
+create index if not exists idx_notifications_user on notifications(user_id, read_at, created_at desc);
