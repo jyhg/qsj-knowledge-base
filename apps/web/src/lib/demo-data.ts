@@ -1,11 +1,22 @@
 import type {
   AuditRecord,
+  BusinessRuleDetail,
+  DqcDeploymentSummary,
+  DqcPublishDiffItem,
+  DqcPublishTask,
+  GitChangeItem,
+  GitVersionSummary,
   KnowledgeCardDetail,
+  ManualRunCandidate,
+  ManualRunResult,
   NotificationItem,
+  ObservationPoint,
+  TableAssetDetail,
   TaskComparePayload,
   TaskDetail,
   TaskResultPayload,
   TaskRunSummary,
+  TestCaseDetail,
   User
 } from "@qsj/shared-types";
 
@@ -15,12 +26,264 @@ export const demoUser: User = {
   role: "dw_developer"
 };
 
+export const demoTableAssets: TableAssetDetail[] = [
+  {
+    id: "tbl_ads_app_qsj_agg_cate_conv",
+    tableName: "ads_app_qsj_agg_cate_conv",
+    displayName: "转化率汇总表",
+    domainCode: "ads_media",
+    description: "自媒体投放效果汇总结果表",
+    riskLevel: "high",
+    ownerUserId: "usr_dw_1",
+    status: "active",
+    currentVersionId: "ver_tbl_1",
+    currentVersionNo: 12,
+    observationPointCount: 2,
+    testCaseCount: 3,
+    businessRuleCount: 2,
+    dqcDeploymentCount: 1,
+    lastAbnormalAt: "2026-04-14T16:10:00.000Z",
+    oneServiceOnlyCaseCount: 2,
+    dualChannelCaseCount: 1,
+    latestVersionSha: "9b5a4a8"
+  }
+];
+
+export const demoObservationPoints: ObservationPoint[] = [
+  {
+    id: "op_1",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    name: "转化率_平台玩法经营类型",
+    metricCode: "conversion_rate",
+    metricName: "转化率",
+    aggregationExpr: "sum(conversion_cnt) / sum(click_cnt)",
+    timeGrain: "day",
+    dimensions: ["biz_date", "platform", "play_type", "operate_mode"],
+    filters: [],
+    sceneTags: ["analysis_validation", "development_self_test"],
+    status: "active",
+    gitPath: "knowledge-assets/observation-points/op_1.yaml",
+    versionNo: 3
+  }
+];
+
+export const demoTestCases: TestCaseDetail[] = [
+  {
+    id: "tc_1",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    name: "自营 vs 投流转化对比",
+    testCaseType: "business_constraint",
+    logicDesc: "某平台某玩法下，自营转化应低于投流转化。",
+    thresholdDesc: "自营转化不得高于投流转化",
+    observationIds: ["op_1"],
+    supportedScenes: ["analysis_validation", "development_self_test"],
+    channel: "one_service",
+    supportsOneService: true,
+    supportsDqc: false,
+    oneServiceParser: "percentage_compare",
+    dqcTemplateType: null,
+    riskLevel: "high",
+    status: "active",
+    lastResultStatus: "failed",
+    lastExecutedAt: "2026-04-14T16:10:00.000Z",
+    sqlTemplate: "select platform, play_type, operate_mode, conversion_rate from ...",
+    businessRuleIds: ["br_1"],
+    gitPath: "knowledge-assets/test-cases/tc_1.yaml",
+    versionNo: 2
+  },
+  {
+    id: "tc_2",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    name: "表 A / 表 B 转化一致性",
+    testCaseType: "reconciliation",
+    logicDesc: "同维度组合下，汇总表与结果表值应一致。",
+    thresholdDesc: "差异 = 0",
+    observationIds: ["op_1"],
+    supportedScenes: ["development_self_test", "dqc_publish"],
+    channel: "dual",
+    supportsOneService: true,
+    supportsDqc: true,
+    oneServiceParser: "numeric_compare",
+    dqcTemplateType: "consistency_check",
+    riskLevel: "high",
+    status: "active",
+    lastResultStatus: "passed",
+    lastExecutedAt: "2026-04-14T15:40:00.000Z",
+    sqlTemplate: "select ...",
+    businessRuleIds: ["br_2"],
+    gitPath: "knowledge-assets/test-cases/tc_2.yaml",
+    versionNo: 4
+  }
+];
+
+export const demoBusinessRules: BusinessRuleDetail[] = [
+  {
+    id: "br_1",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    name: "自营转化应低于投流转化",
+    semanticDesc: "某平台某玩法下，自营转化通常低于投流转化。",
+    applicableScope: "平台=抖音，玩法=直播",
+    exceptionScope: null,
+    observationIds: ["op_1"],
+    testCaseIds: ["tc_1"],
+    status: "active",
+    commonCauses: "流量分类错误、归因口径错误、样本范围异常",
+    analysisHint: "优先排查 operate_mode 映射与转化归因 SQL",
+    gitPath: "knowledge-assets/business-rules/br_1.yaml",
+    versionNo: 2
+  }
+];
+
+export const demoDqcDeployments: DqcDeploymentSummary[] = [
+  {
+    id: "dqc_1",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    testCaseId: "tc_2",
+    dqcRuleType: "consistency_check",
+    monitorName: "表A表B转化一致性",
+    monitorObject: "ads_app_qsj_agg_cate_conv",
+    monitorField: "order_cnt",
+    conditionExpr: "diff = 0",
+    publishStatus: "published",
+    dqcRuleId: "dqc_rule_1001",
+    lastSyncedAt: "2026-04-14T18:00:00.000Z"
+  }
+];
+
+export const demoManualRunCandidates: ManualRunCandidate[] = [
+  {
+    tableId: "tbl_ads_app_qsj_agg_cate_conv",
+    testCaseId: "tc_1",
+    testCaseName: "自营 vs 投流转化对比",
+    channel: "one_service",
+    riskLevel: "high",
+    recommendationReason: "命中转化率相关业务规则"
+  },
+  {
+    tableId: "tbl_ads_app_qsj_agg_cate_conv",
+    testCaseId: "tc_2",
+    testCaseName: "表 A / 表 B 转化一致性",
+    channel: "dual",
+    riskLevel: "high",
+    recommendationReason: "涉及多表对账"
+  }
+];
+
+export const demoManualRunResult: ManualRunResult = {
+  runId: "mr_1",
+  batch: {
+    id: "mrb_1",
+    manualRunId: "mr_1",
+    oneServiceRequestId: "os_123456",
+    status: "succeeded",
+    triggeredBy: "usr_dw_1",
+    startedAt: "2026-04-14T10:00:00.000Z",
+    finishedAt: "2026-04-14T10:03:00.000Z"
+  },
+  findings: [
+    {
+      id: "mrf_1",
+      batchId: "mrb_1",
+      tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+      testCaseId: "tc_1",
+      businessRuleId: "br_1",
+      resultStatus: "failed",
+      findingSummary: "平台=抖音、玩法=直播下，自营转化高于投流转化。",
+      abnormalDimensions: [{ platform: "douyin", playType: "live", operateMode: "self" }],
+      evidence: { selfConversion: 4.2, paidConversion: 3.1 },
+      oneServiceSummary: "自营转化 4.2%，投流转化 3.1%",
+      sortScore: 95
+    }
+  ],
+  oneServiceRequestId: "os_123456",
+  referencedBusinessRuleIds: ["br_1"]
+};
+
+export const demoDqcPublishTask: DqcPublishTask = {
+  id: "dqc_task_1",
+  title: "ads_app_qsj_agg_cate_conv DQC 回填",
+  tableIds: ["tbl_ads_app_qsj_agg_cate_conv"],
+  status: "diff_ready",
+  createdBy: "usr_dw_1",
+  createdAt: "2026-04-15T09:00:00.000Z"
+};
+
+export const demoDqcPublishDiffs: DqcPublishDiffItem[] = [
+  {
+    id: "dqc_diff_1",
+    publishTaskId: "dqc_task_1",
+    tableAssetId: "tbl_ads_app_qsj_agg_cate_conv",
+    testCaseId: "tc_2",
+    currentDqcStatus: "unpublished",
+    suggestedAction: "create",
+    reason: "高风险且长期有效",
+    selected: true
+  }
+];
+
+export const demoGitVersions: GitVersionSummary[] = [
+  {
+    id: "ver_tbl_1",
+    commitSha: "9b5a4a8",
+    commitMessage: "feat: align schema and shared types with latest design",
+    authorUserId: "usr_dw_1",
+    relatedObjectType: "table_asset",
+    relatedObjectId: "tbl_ads_app_qsj_agg_cate_conv",
+    versionNo: 12,
+    createdAt: "2026-04-15T11:20:00.000Z"
+  }
+];
+
+export const demoGitChangeItems: GitChangeItem[] = [
+  {
+    id: "gci_1",
+    gitVersionId: "ver_tbl_1",
+    filePath: "knowledge-assets/test-cases/tc_2.yaml",
+    changeType: "modify",
+    diffSummary: "更新对账阈值与 DQC 映射"
+  }
+];
+
+export const demoAudits: AuditRecord[] = [
+  {
+    id: "audit_1",
+    entityType: "manual_run_batch",
+    entityId: "mrb_1",
+    action: "execute_one_service",
+    operatorUserId: "usr_dw_1",
+    operatorRole: "dw_developer",
+    detail: {
+      oneServiceRequestId: "os_123456",
+      resultRowCount: 2,
+      executionStatus: "succeeded"
+    },
+    createdAt: "2026-04-14T10:01:00.000Z"
+  }
+];
+
+export const demoNotifications: NotificationItem[] = [
+  {
+    id: "notice_1",
+    userId: "usr_dw_1",
+    type: "feedback_confirmation",
+    taskId: "mr_1",
+    title: "手动验数任务待确认回写",
+    content: "批次 mr_1 已产生待沉淀知识。",
+    status: "unread",
+    relatedObjectType: "manual_run",
+    relatedObjectId: "mr_1",
+    createdAt: "2026-04-14T10:05:00.000Z"
+  }
+];
+
+// Legacy demo exports retained for older pages.
+
 export const demoTasks: TaskDetail[] = [
   {
     id: "task_1",
     title: "4月第一周投放归因验数",
     scene: "analysis_validation",
-    targetTable: "ads_attribution_daily",
+    targetTable: "ads_app_qsj_agg_cate_conv",
     targetMetrics: [
       { metricCode: "metric_order_cnt", metricName: "订单数" },
       { metricCode: "metric_roi", metricName: "ROI" }
@@ -34,26 +297,6 @@ export const demoTasks: TaskDetail[] = [
     status: "pending_feedback",
     lastRunAt: "2026-04-14T10:00:00.000Z",
     hasPendingFeedback: true,
-    extraSql: null
-  },
-  {
-    id: "task_2",
-    title: "达人投放周报需求交付验收",
-    scene: "delivery_dqc",
-    targetTable: "ads_delivery_daily",
-    targetMetrics: [
-      { metricCode: "metric_spend", metricName: "消耗" },
-      { metricCode: "metric_conversion_rate", metricName: "转化率" }
-    ],
-    requirementDesc: "交付达人投放周报，要求覆盖平台、达人、素材、地域维度的稳定输出。",
-    changeDesc: "新增达人层级汇总逻辑，并调整转化率口径。",
-    businessDateStart: "2026-04-08",
-    businessDateEnd: "2026-04-14",
-    executorUserId: "usr_dw_1",
-    pmUserId: "usr_pm_1",
-    status: "draft",
-    lastRunAt: null,
-    hasPendingFeedback: false,
     extraSql: null
   }
 ];
@@ -87,34 +330,6 @@ export const demoResult: TaskResultPayload = {
       evidence: { current: 120034, baselineAvg: 176982 },
       ruleId: "rule_1",
       sortScore: 95
-    },
-    {
-      id: "finding_2",
-      runId: "run_1",
-      level: "metric",
-      metricCode: "metric_roi",
-      checkType: "metric_volatility",
-      riskLevel: "high",
-      status: "failed",
-      findingSummary: "ROI 在平台=抖音、玩法=直播间维度异常波动。",
-      impactScope: "metric_roi / platform=douyin / play=live",
-      evidence: { current: 1.12, baselineAvg: 2.31 },
-      ruleId: "rule_2",
-      sortScore: 90
-    },
-    {
-      id: "finding_3",
-      runId: "run_1",
-      level: "metric",
-      metricCode: "metric_order_cnt",
-      checkType: "dimension_coverage",
-      riskLevel: "medium",
-      status: "warning",
-      findingSummary: "账号维度覆盖率低于知识库阈值。",
-      impactScope: "metric_order_cnt / account",
-      evidence: { coverageRate: 0.71, threshold: 0.85 },
-      ruleId: "rule_3",
-      sortScore: 65
     }
   ]
 };
@@ -152,36 +367,6 @@ export const demoKnowledgeCards: KnowledgeCardDetail[] = [
   }
 ];
 
-export const demoAudits: AuditRecord[] = [
-  {
-    id: "audit_1",
-    entityType: "task_run_sql_execution",
-    entityId: "run_1",
-    action: "execute_sql",
-    operatorUserId: "usr_dw_1",
-    operatorRole: "dw_developer",
-    detail: {
-      sqlSummary: "table level checks for ads_attribution_daily",
-      resultRowCount: 3,
-      executionStatus: "succeeded"
-    },
-    createdAt: "2026-04-14T10:01:00.000Z"
-  }
-];
-
-export const demoNotifications: NotificationItem[] = [
-  {
-    id: "notice_1",
-    userId: "usr_dw_1",
-    taskId: "task_1",
-    type: "feedback_confirmation",
-    title: "任务待确认回写",
-    content: "任务 4月第一周投放归因验数 已产生待沉淀知识。",
-    status: "unread",
-    createdAt: "2026-04-14T10:05:00.000Z"
-  }
-];
-
 export const demoCompare: TaskComparePayload = {
   baseRunId: "run_1",
   targetRunId: "run_2",
@@ -191,18 +376,6 @@ export const demoCompare: TaskComparePayload = {
       summary: "规则内容存在 2 处差异",
       left: "阈值 20%",
       right: "阈值 30%"
-    },
-    {
-      section: "sql",
-      summary: "SQL 增加投放玩法维度",
-      left: "group by platform, dt",
-      right: "group by platform, play_type, dt"
-    },
-    {
-      section: "results",
-      summary: "高风险异常数从 2 提升到 4",
-      left: "high=2",
-      right: "high=4"
     }
   ]
 };

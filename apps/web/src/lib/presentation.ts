@@ -9,6 +9,7 @@ import type {
 
 const sceneLabels: Record<TaskScene, string> = {
   analysis_validation: "分析验数",
+  development_self_test: "开发自测",
   delivery_dqc: "需求交付"
 };
 

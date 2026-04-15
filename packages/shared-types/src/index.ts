@@ -54,7 +54,10 @@ export type FeedbackItemType =
   | "test_case"
   | "business_rule"
   | "anomaly_pattern"
-  | "dqc_mapping";
+  | "dqc_mapping"
+  | "sql_template"
+  | "scope_decision"
+  | "handling_method";
 
 export interface User {
   id: string;
@@ -262,8 +265,10 @@ export interface FeedbackBatchItemInput {
 }
 
 export interface CreateFeedbackBatchInput {
+  runId?: string;
   reason: string;
-  applicableScenes: string[];
+  applicableScene?: string;
+  applicableScenes?: string[];
   items: FeedbackBatchItemInput[];
 }
 
