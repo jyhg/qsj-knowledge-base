@@ -1,0 +1,16 @@
+{
+  "name": "qsj-knowledge-base",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace @qsj/web run dev",
+    "dev:api": "npm --workspace @qsj/api run start:dev",
+    "build:web": "npm --workspace @qsj/web run build",
+    "build:api": "npm --workspace @qsj/api run build"
+  }
+}
+
