@@ -132,7 +132,21 @@ export async function getExecutionPublishSummary(tableId: string): Promise<{
   });
 }
 
-export function createManualRun(input: ManualRunInput) {
+export function createManualRun(input: ManualRunInput): Promise<{
+  id: string;
+  title: string;
+  scene: ManualRunInput["scene"];
+  tableIds: string[];
+  metricCodes: string[];
+  requirementDesc: string;
+  changeDesc: string;
+  businessDateStart: string;
+  businessDateEnd: string;
+  executorUserId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}> {
   return submitJson("/manual-runs", {
     method: "POST",
     body: JSON.stringify(input)

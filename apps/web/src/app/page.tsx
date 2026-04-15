@@ -6,7 +6,11 @@ import {
   listNotifications,
   listTableAssets
 } from "../lib/api";
-import { formatDateTime, getRiskLabel } from "../lib/table-first-presentation";
+import {
+  formatDateTime,
+  getManualRunBatchStatusLabel,
+  getRiskLabel
+} from "../lib/table-first-presentation";
 
 export default async function HomePage() {
   const [user, tables, notifications, versions, latestRun, dqcDiffs] = await Promise.all([
@@ -121,10 +125,12 @@ export default async function HomePage() {
           </div>
           {latestRun ? (
             <div className="list-item">
-              <div className="row wrap">
-                <strong>{latestRun.runId}</strong>
-                <span className={`badge status-${latestRun.batch.status}`}>{latestRun.batch.status}</span>
-              </div>
+                  <div className="row wrap">
+                    <strong>{latestRun.runId}</strong>
+                    <span className={`badge status-${latestRun.batch.status}`}>
+                      {getManualRunBatchStatusLabel(latestRun.batch.status)}
+                    </span>
+                  </div>
               <p className="muted">
                 one service 请求号：{latestRun.oneServiceRequestId ?? "-"} · 完成时间：
                 {formatDateTime(latestRun.batch.finishedAt)}

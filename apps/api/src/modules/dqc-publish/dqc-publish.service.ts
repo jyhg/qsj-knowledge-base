@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
-import { dqcPublishDiffs, dqcPublishTasks } from "../../data/mock-store.js";
+import { dqcDeployments, dqcPublishDiffs, dqcPublishTasks, testCases } from "../../data/mock-store.js";
 
 function nowIso() {
   return new Date().toISOString();
@@ -32,7 +32,29 @@ export class DqcPublishService {
   generateDiff(publishId: string) {
     const task = this.getTask(publishId);
     task.status = "diff_ready";
-    return dqcPublishDiffs.filter((item) => item.publishTaskId === publishId);
+    const existingDiffs = dqcPublishDiffs.filter((item) => item.publishTaskId === publishId);
+    if (existingDiffs.length > 0) {
+      return existingDiffs;
+    }
+
+    const generated = testCases
+      .filter((item) => task.tableIds.includes(item.tableAssetId) && item.supportsDqc)
+      .map((item, index) => {
+        const deployment = dqcDeployments.find((candidate) => candidate.testCaseId === item.id);
+        return {
+          id: `dqc_diff_${dqcPublishDiffs.length + index + 1}`,
+          publishTaskId: publishId,
+          tableAssetId: item.tableAssetId,
+          testCaseId: item.id,
+          currentDqcStatus: deployment?.publishStatus ?? "unpublished",
+          suggestedAction: deployment ? "update" : "create",
+          reason: deployment ? "已有 DQC 配置，需按最新知识更新" : "高风险且适合纳入长期监控",
+          selected: true
+        } as const;
+      });
+
+    dqcPublishDiffs.push(...generated);
+    return generated;
   }
 
   getDiff(publishId: string) {

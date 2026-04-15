@@ -1,4 +1,8 @@
 import { listNotifications } from "../../lib/api";
+import {
+  formatDateTime,
+  getNotificationStatusLabel
+} from "../../lib/table-first-presentation";
 
 export default async function NotificationsPage() {
   const notifications = await listNotifications();
@@ -17,10 +21,12 @@ export default async function NotificationsPage() {
             <div className="list-item" key={notification.id}>
               <div className="row wrap">
                 <strong>{notification.title}</strong>
-                <span className={`badge status-${notification.status}`}>{notification.status}</span>
+                <span className={`badge status-${notification.status}`}>
+                  {getNotificationStatusLabel(notification.status)}
+                </span>
               </div>
               <p>{notification.content}</p>
-              <p className="muted">{notification.createdAt}</p>
+              <p className="muted">{formatDateTime(notification.createdAt)}</p>
             </div>
           ))}
         </div>

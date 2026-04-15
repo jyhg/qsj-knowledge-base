@@ -3,8 +3,10 @@ import type {
   DqcPublishStatus,
   DqcSuggestedAction,
   ExecutionChannel,
+  ManualRunBatch,
   ManualRunResultStatus,
-  ManualRunScene
+  ManualRunScene,
+  NotificationItem
 } from "@qsj/shared-types";
 
 const riskLabels = {
@@ -36,6 +38,13 @@ const resultLabels: Record<ManualRunResultStatus, string> = {
   failed: "异常"
 };
 
+const batchStatusLabels: Record<ManualRunBatch["status"], string> = {
+  queued: "排队中",
+  running: "执行中",
+  succeeded: "执行成功",
+  failed: "执行失败"
+};
+
 const dqcPublishStatusLabels: Record<DqcPublishStatus, string> = {
   draft: "草稿",
   pending_confirm: "待确认",
@@ -48,6 +57,11 @@ const dqcActionLabels: Record<DqcSuggestedAction, string> = {
   update: "更新",
   offline: "下线",
   unchanged: "保持不变"
+};
+
+const notificationStatusLabels: Record<NonNullable<NotificationItem["status"]>, string> = {
+  unread: "未读",
+  read: "已读"
 };
 
 export function getRiskLabel(risk: keyof typeof riskLabels) {
@@ -70,12 +84,23 @@ export function getManualRunResultLabel(status: ManualRunResultStatus) {
   return resultLabels[status];
 }
 
+export function getManualRunBatchStatusLabel(status: ManualRunBatch["status"]) {
+  return batchStatusLabels[status];
+}
+
 export function getDqcPublishStatusLabel(status: DqcPublishStatus) {
   return dqcPublishStatusLabels[status];
 }
 
 export function getDqcSuggestedActionLabel(action: DqcSuggestedAction) {
   return dqcActionLabels[action];
+}
+
+export function getNotificationStatusLabel(status?: NotificationItem["status"]) {
+  if (!status) {
+    return "-";
+  }
+  return notificationStatusLabels[status];
 }
 
 export function formatDateTime(value?: string | null) {

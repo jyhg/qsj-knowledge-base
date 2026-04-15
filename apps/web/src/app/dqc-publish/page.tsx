@@ -1,6 +1,10 @@
+import { createDqcPublishTaskAction } from "./actions";
 import { getDqcPublishDiff, listTableAssets } from "../../lib/api";
 import { demoDqcPublishTask } from "../../lib/demo-data";
-import { getDqcSuggestedActionLabel } from "../../lib/table-first-presentation";
+import {
+  getDqcSuggestedActionLabel,
+  getRiskLabel
+} from "../../lib/table-first-presentation";
 
 export default async function DqcPublishPage() {
   const [tables, diffs] = await Promise.all([listTableAssets(), getDqcPublishDiff(demoDqcPublishTask.id)]);
@@ -27,6 +31,39 @@ export default async function DqcPublishPage() {
           <span className="stat-value">{diffs.filter((item) => item.selected).length}</span>
         </div>
       </section>
+
+      <form action={createDqcPublishTaskAction} className="panel">
+        <div className="row wrap">
+          <h2 className="section-title">创建回填任务</h2>
+          <button className="button" type="submit">
+            创建回填任务并生成差异
+          </button>
+        </div>
+        <label style={{ display: "block", marginTop: 16 }}>
+          任务标题
+          <input
+            className="input"
+            defaultValue="4月第二周需求上线 DQC 回填"
+            name="title"
+            required
+            type="text"
+          />
+        </label>
+        <div style={{ marginTop: 16 }}>
+          <div className="muted">涉及表</div>
+          <div className="list" style={{ marginTop: 8 }}>
+            {tables.map((table, index) => (
+              <label className="list-item" key={table.id}>
+                <input defaultChecked={index === 0} name="tableIds" type="checkbox" value={table.id} />{" "}
+                {table.tableName}
+                <div className="muted">
+                  {table.displayName} · {getRiskLabel(table.riskLevel)} · DQC 映射 {table.dqcDeploymentCount}
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+      </form>
 
       <section className="panel">
         <div className="row wrap">

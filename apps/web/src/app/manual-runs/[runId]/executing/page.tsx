@@ -1,5 +1,8 @@
 import { getManualRunStatus } from "../../../../lib/api";
-import { formatDateTime } from "../../../../lib/table-first-presentation";
+import {
+  formatDateTime,
+  getManualRunBatchStatusLabel
+} from "../../../../lib/table-first-presentation";
 
 export default async function ManualRunExecutingPage({
   params
@@ -24,7 +27,7 @@ export default async function ManualRunExecutingPage({
         </div>
         <div className="panel stat">
           <span className="muted">状态</span>
-          <span className="stat-value">{status.status}</span>
+          <span className="stat-value">{getManualRunBatchStatusLabel(status.status)}</span>
         </div>
         <div className="panel stat">
           <span className="muted">请求号</span>
