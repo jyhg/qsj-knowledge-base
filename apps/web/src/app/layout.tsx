@@ -4,14 +4,16 @@ import "./globals.css";
 
 const navItems = [
   { href: "/", label: "工作台" },
-  { href: "/tasks", label: "任务中心" },
-  { href: "/knowledge", label: "知识库" },
+  { href: "/tables", label: "表资产" },
+  { href: "/manual-runs/new", label: "验数执行台" },
+  { href: "/dqc-publish", label: "DQC 回填台" },
+  { href: "/versions", label: "版本记录" },
   { href: "/notifications", label: "我的提示" }
 ];
 
 export const metadata = {
-  title: "数据质量知识库与 AI 验数助手",
-  description: "QSJ internal data quality console"
+  title: "数仓测试用例知识库与验数运营台",
+  description: "Table-first warehouse validation knowledge base and operations console"
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -40,4 +42,3 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     </html>
   );
 }
-
