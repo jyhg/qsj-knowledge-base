@@ -250,6 +250,9 @@ apps/api/db/
 | `/tables` | 表列表 | 数仓开发/PM | 表资产第一入口 |
 | `/tables/[tableId]` | 表详情 | 数仓开发/PM | 顶部摘要 + Tabs |
 | `/tables/[tableId]/edit` | 表资产编辑 | 数仓开发 | 编辑表级资产 |
+| `/observations/[observationId]` | 观测点详情 | 数仓开发/PM | 观测点详情与编辑抽屉入口 |
+| `/test-cases/[testCaseId]` | 测试用例详情 | 数仓开发/PM | 测试用例详情与编辑抽屉入口 |
+| `/business-rules/[ruleId]` | 业务规则详情 | 数仓开发/PM | 业务规则详情与编辑抽屉入口 |
 | `/manual-runs/new` | 手动验数任务录入 | 数仓开发 | 创建分析验数/开发自测任务 |
 | `/manual-runs/[runId]/select` | 规则集合选择 | 数仓开发 | 勾选测试用例 |
 | `/manual-runs/[runId]/executing` | 执行中 | 数仓开发 | 轮询 `one service` 状态 |
@@ -622,7 +625,7 @@ time_grain          varchar not null
 dimension_json      text not null
 filter_json         text not null
 scene_tags_json     text not null
-status              varchar not null
+status              varchar not null -- draft / active / deprecated
 git_path            varchar not null
 version_no          int not null
 created_by          varchar not null
@@ -644,7 +647,7 @@ supports_dqc        boolean not null
 one_service_parser  varchar null
 dqc_template_type   varchar null
 risk_level          varchar not null
-status              varchar not null
+status              varchar not null -- draft / active / deprecated
 git_path            varchar not null
 version_no          int not null
 created_by          varchar not null
@@ -662,7 +665,7 @@ applicable_scope    text null
 exception_scope     text null
 common_causes       text null
 analysis_hint       text null
-status              varchar not null
+status              varchar not null -- draft / active / deprecated
 git_path            varchar not null
 version_no          int not null
 created_by          varchar not null
