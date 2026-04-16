@@ -29,6 +29,14 @@ test.describe('knowledge assets full flow', () => {
 
     await page.getByRole('button', { name: '新增测试用例' }).click();
     await expect(page).toHaveURL(`http://127.0.0.1:3000/test-cases/new?tableId=${tableId}`);
+    await expect(page.getByRole('heading', { name: '新建测试用例' })).toBeVisible();
+    await expect(page.getByText('从表详情页补全新建链路')).toBeVisible();
+    await expect(page.locator('#tableAssetId')).toHaveValue(tableId);
+    await expect(page.locator('#name')).toBeVisible();
+    await expect(page.locator('#logicDesc')).toBeVisible();
+    await expect(page.locator('#sqlTemplate')).toBeVisible();
+    await expect(page.getByRole('link', { name: '返回表详情' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '创建测试用例' })).toBeVisible();
 
     await page.locator('#name').fill(createdName);
     await page.locator('#logicDesc').fill('Playwright 创建的测试用例逻辑说明');
@@ -44,7 +52,7 @@ test.describe('knowledge assets full flow', () => {
     await page.getByRole('button', { name: '编辑测试用例' }).click();
     await page.locator('#name').fill(updatedName);
     await page.locator('#logicDesc').fill('Playwright 更新后的测试用例逻辑说明');
-    await page.getByRole('button', { name: '保存' }).click();
+    await page.getByRole('button', { name: '保存测试用例' }).click();
 
     await expect(page.getByRole('heading', { name: updatedName })).toBeVisible();
     await expect(page.getByText('Playwright 更新后的测试用例逻辑说明')).toBeVisible();
@@ -64,6 +72,11 @@ test.describe('knowledge assets full flow', () => {
     await selectTab(page, '观测点');
     await page.getByRole('button', { name: '新增观测点' }).click();
     await expect(page).toHaveURL(`http://127.0.0.1:3000/observations/new?tableId=${tableId}`);
+    await expect(page.getByRole('heading', { name: '新建观测点' })).toBeVisible();
+    await expect(page.locator('#tableAssetId')).toHaveValue(tableId);
+    await expect(page.locator('#metricCode')).toBeVisible();
+    await expect(page.locator('#aggregationExpr')).toBeVisible();
+    await expect(page.getByRole('link', { name: '返回表详情' })).toBeVisible();
 
     await page.locator('#name').fill(createdName);
     await page.locator('#metricCode').fill(unique('metric_code'));
@@ -80,7 +93,7 @@ test.describe('knowledge assets full flow', () => {
     await page.getByRole('button', { name: '编辑观测点' }).click();
     await page.locator('#name').fill(updatedName);
     await page.locator('#metricName').fill('Playwright 更新后的观测指标');
-    await page.getByRole('button', { name: '保存' }).click();
+    await page.getByRole('button', { name: '保存观测点' }).click();
 
     await expect(page.getByRole('heading', { name: updatedName })).toBeVisible();
     await expect(page.getByText('Playwright 更新后的观测指标')).toBeVisible();
@@ -101,6 +114,10 @@ test.describe('knowledge assets full flow', () => {
     await selectTab(page, '业务规则');
     await page.getByRole('button', { name: '新增业务规则' }).click();
     await expect(page).toHaveURL(`http://127.0.0.1:3000/business-rules/new?tableId=${tableId}`);
+    await expect(page.getByRole('heading', { name: '新建业务规则' })).toBeVisible();
+    await expect(page.locator('#tableAssetId')).toHaveValue(tableId);
+    await expect(page.locator('#semanticDesc')).toBeVisible();
+    await expect(page.getByRole('link', { name: '返回表详情' })).toBeVisible();
 
     await page.locator('#name').fill(createdName);
     await page.locator('#semanticDesc').fill('Playwright 创建的业务规则语义说明');
@@ -115,7 +132,7 @@ test.describe('knowledge assets full flow', () => {
     await page.getByRole('button', { name: '编辑业务规则' }).click();
     await page.locator('#name').fill(updatedName);
     await page.locator('#analysisHint').fill('Playwright 更新后的排查建议');
-    await page.getByRole('button', { name: '保存' }).click();
+    await page.getByRole('button', { name: '保存业务规则' }).click();
 
     await expect(page.getByRole('heading', { name: updatedName })).toBeVisible();
     await expect(page.getByText('Playwright 更新后的排查建议')).toBeVisible();
@@ -126,5 +143,30 @@ test.describe('knowledge assets full flow', () => {
     await expect(item).toBeVisible();
     await item.getByRole('button', { name: '删除' }).click();
     await expect(page.locator('.list-item', { hasText: updatedName })).toHaveCount(0);
+  });
+
+  test('table asset edit flow keeps the maintenance UI working', async ({ page }) => {
+    const updatedDisplayName = unique('pw-table-display');
+
+    await page.goto(tableDetailPath);
+    await page.getByRole('link', { name: '编辑表资产' }).click();
+
+    await expect(page).toHaveURL(`http://127.0.0.1:3000/tables/${tableId}/edit`);
+    await expect(page.getByRole('heading', { name: '编辑表资产' })).toBeVisible();
+    await expect(page.locator('#tableName')).toHaveValue('ads_app_qsj_agg_cate_conv');
+    await expect(page.locator('#displayName')).toBeVisible();
+    await expect(page.locator('#description')).toBeVisible();
+    await expect(page.getByRole('button', { name: '保存表资产' })).toBeVisible();
+
+    await page.locator('#displayName').fill(updatedDisplayName);
+    await page.locator('#description').fill('Playwright 更新后的表资产说明');
+    await page.locator('#ownerUserId').fill('playwright_owner');
+    await page.getByRole('button', { name: '保存表资产' }).click();
+
+    await expect(page).toHaveURL(`http://127.0.0.1:3000/tables/${tableId}`);
+    await expect(page.getByText(updatedDisplayName)).toBeVisible();
+
+    await page.getByRole('link', { name: '编辑表资产' }).click();
+    await expect(page.locator('#displayName')).toHaveValue(updatedDisplayName);
   });
 });

@@ -94,11 +94,15 @@ function EditTableAssetPageContent() {
   };
 
   if (isLoading) {
-    return <div className="grid">Loading...</div>;
+    return <div className="status-message">加载中...</div>;
+  }
+
+  if (error && !table) {
+    return <div className="status-message error">{error}</div>;
   }
 
   if (!table) {
-    return <div className="grid">Table asset not found.</div>;
+    return <div className="status-message">未找到表资产。</div>;
   }
 
   return (
@@ -130,77 +134,92 @@ function EditTableAssetPageContent() {
       </section>
 
       <section className="panel">
-        <form onSubmit={handleSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="tableName">Table Name:</label>
-            <input type="text" id="tableName" value={table.tableName} readOnly />
+        <h2 className="section-title">表资产信息</h2>
+        <form onSubmit={handleSubmit} className="grid">
+          <div className="grid cols-2">
+            <label className="field" htmlFor="tableName">
+              <span className="field-label">表名</span>
+              <input className="input" type="text" id="tableName" value={table.tableName} readOnly />
+            </label>
+            <label className="field" htmlFor="displayName">
+              <span className="field-label">展示名</span>
+              <input
+                className="input"
+                type="text"
+                id="displayName"
+                name="displayName"
+                value={formData.displayName}
+                onChange={handleChange}
+                required
+              />
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="displayName">Display Name:</label>
-            <input
-              type="text"
-              id="displayName"
-              name="displayName"
-              value={formData.displayName}
-              onChange={handleChange}
-              required
-            />
+
+          <div className="grid cols-2">
+            <label className="field" htmlFor="domainCode">
+              <span className="field-label">域编码</span>
+              <input
+                className="input"
+                type="text"
+                id="domainCode"
+                name="domainCode"
+                value={formData.domainCode}
+                onChange={handleChange}
+              />
+            </label>
+            <label className="field" htmlFor="ownerUserId">
+              <span className="field-label">Owner 用户 ID</span>
+              <input
+                className="input"
+                type="text"
+                id="ownerUserId"
+                name="ownerUserId"
+                value={formData.ownerUserId}
+                onChange={handleChange}
+              />
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="domainCode">Domain Code:</label>
-            <input
-              type="text"
-              id="domainCode"
-              name="domainCode"
-              value={formData.domainCode}
-              onChange={handleChange}
-            />
+
+          <div className="grid cols-2">
+            <label className="field" htmlFor="riskLevel">
+              <span className="field-label">风险等级</span>
+              <select className="select" id="riskLevel" name="riskLevel" value={formData.riskLevel} onChange={handleChange}>
+                <option value="low">低</option>
+                <option value="medium">中</option>
+                <option value="high">高</option>
+              </select>
+            </label>
+            <label className="field" htmlFor="status">
+              <span className="field-label">资产状态</span>
+              <select className="select" id="status" name="status" value={formData.status} onChange={handleChange}>
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="deprecated">Deprecated</option>
+              </select>
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="ownerUserId">Owner User ID:</label>
-            <input
-              type="text"
-              id="ownerUserId"
-              name="ownerUserId"
-              value={formData.ownerUserId}
-              onChange={handleChange}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="riskLevel">Risk Level:</label>
-            <select id="riskLevel" name="riskLevel" value={formData.riskLevel} onChange={handleChange}>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="status">Status:</label>
-            <select id="status" name="status" value={formData.status} onChange={handleChange}>
-              <option value="draft">Draft</option>
-              <option value="active">Active</option>
-              <option value="deprecated">Deprecated</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="description">Description:</label>
+
+          <label className="field" htmlFor="description">
+            <span className="field-label">表级说明</span>
             <textarea
+              className="textarea"
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={4}
             />
-          </div>
+          </label>
+
           <div className="button-row">
-            <button type="submit" className="button primary" disabled={isSubmitting}>
+            <button type="submit" className="button" disabled={isSubmitting}>
               {isSubmitting ? '保存中...' : '保存表资产'}
             </button>
             <a className="button secondary" href={withUserRoleQuery(`/tables/${tableId}`, role)}>
               返回表详情
             </a>
           </div>
-          {error && <p className="error-message">{error}</p>}
+
+          {error ? <p className="inline-error">{error}</p> : null}
         </form>
       </section>
     </div>
@@ -209,7 +228,7 @@ function EditTableAssetPageContent() {
 
 export default function EditTableAssetPage() {
   return (
-    <Suspense fallback={<div className="grid">Loading...</div>}>
+    <Suspense fallback={<div className="status-message">加载中...</div>}>
       <EditTableAssetPageContent />
     </Suspense>
   );

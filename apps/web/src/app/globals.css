@@ -192,6 +192,22 @@ a {
   color: #fff;
   font-weight: 600;
   cursor: pointer;
+  font: inherit;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .button.secondary {
@@ -200,8 +216,71 @@ a {
   border-color: var(--line);
 }
 
+.button.danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+.button.small {
+  padding: 8px 12px;
+  font-size: 0.88rem;
+}
+
+.field {
+  display: block;
+}
+
+.field-label {
+  display: block;
+  font-weight: 600;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.field-toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.56);
+}
+
+.field-toggle input {
+  margin-top: 4px;
+}
+
+.field-toggle strong {
+  display: block;
+}
+
+.field-toggle span span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.inline-error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(163, 61, 45, 0.2);
+  background: #f9e2de;
+  color: var(--danger);
+}
+
 .input,
-.textarea {
+.textarea,
+.select {
   width: 100%;
   margin-top: 8px;
   padding: 12px 14px;
@@ -330,6 +409,18 @@ a {
   border-radius: 999px;
   border: 1px solid var(--line);
   background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.tab.active {
+  background: var(--accent-soft);
+  color: var(--text);
+  border-color: rgba(181, 75, 47, 0.32);
 }
 
 .diff-block {
@@ -353,6 +444,29 @@ a {
   font-family: "SFMono-Regular", "Menlo", "Monaco", "Consolas", monospace;
   font-size: 0.88rem;
   white-space: pre-wrap;
+}
+
+.code-block {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  overflow-x: auto;
+}
+
+.status-message {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.status-message.error {
+  border-color: rgba(163, 61, 45, 0.24);
+  background: #f9e2de;
+  color: var(--danger);
 }
 
 @media (max-width: 900px) {

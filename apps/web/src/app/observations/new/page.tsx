@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, Suspense, useState } from 'react';
+import { Suspense, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ObservationPoint } from '@qsj/shared-types';
 
@@ -25,8 +25,10 @@ function NewObservationPointPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const resolvedRole = role === 'dw_developer' || role === 'pm' ? role : undefined;
+
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -40,8 +42,8 @@ function NewObservationPointPageContent() {
     }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
     setIsSubmitting(true);
 
@@ -52,12 +54,11 @@ function NewObservationPointPageContent() {
         filters: [],
         sceneTags: []
       });
-      router.push(withUserRoleQuery(`/observations/${created.id}`, role === 'dw_developer' || role === 'pm' ? role : undefined));
+      router.push(withUserRoleQuery(`/observations/${created.id}`, resolvedRole));
       router.refresh();
     } catch (err) {
       setError('Failed to create observation point.');
       console.error(err);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -71,84 +72,111 @@ function NewObservationPointPageContent() {
       </section>
 
       <section className="panel">
-        <form onSubmit={handleSubmit} className="form">
-          <div className="form-group">
-            <label htmlFor="tableAssetId">Table Asset ID:</label>
-            <input
-              type="text"
-              id="tableAssetId"
-              name="tableAssetId"
-              value={formData.tableAssetId || ''}
-              onChange={handleChange}
-              required
-            />
+        <h2 className="section-title">观测点基础信息</h2>
+        <form onSubmit={handleSubmit} className="grid">
+          <div className="grid cols-2">
+            <label className="field" htmlFor="tableAssetId">
+              <span className="field-label">表资产 ID</span>
+              <input
+                className="input"
+                type="text"
+                id="tableAssetId"
+                name="tableAssetId"
+                value={formData.tableAssetId || ''}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="field" htmlFor="name">
+              <span className="field-label">观测点名称</span>
+              <input
+                className="input"
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name || ''}
+                onChange={handleChange}
+                required
+              />
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="name">Name:</label>
-            <input type="text" id="name" name="name" value={formData.name || ''} onChange={handleChange} required />
+
+          <div className="grid cols-2">
+            <label className="field" htmlFor="metricCode">
+              <span className="field-label">指标编码</span>
+              <input
+                className="input"
+                type="text"
+                id="metricCode"
+                name="metricCode"
+                value={formData.metricCode || ''}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="field" htmlFor="metricName">
+              <span className="field-label">指标名称</span>
+              <input
+                className="input"
+                type="text"
+                id="metricName"
+                name="metricName"
+                value={formData.metricName || ''}
+                onChange={handleChange}
+                required
+              />
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="metricCode">Metric Code:</label>
-            <input
-              type="text"
-              id="metricCode"
-              name="metricCode"
-              value={formData.metricCode || ''}
-              onChange={handleChange}
-              required
-            />
+
+          <div className="grid cols-2">
+            <label className="field" htmlFor="timeGrain">
+              <span className="field-label">时间粒度</span>
+              <input
+                className="input"
+                type="text"
+                id="timeGrain"
+                name="timeGrain"
+                value={formData.timeGrain || ''}
+                onChange={handleChange}
+                required
+              />
+            </label>
+            <label className="field" htmlFor="dimensions">
+              <span className="field-label">维度组合</span>
+              <input
+                className="input"
+                type="text"
+                id="dimensions"
+                name="dimensions"
+                value={Array.isArray(formData.dimensions) ? formData.dimensions.join(', ') : ''}
+                onChange={(event) => handleDimensionsChange(event.target.value)}
+              />
+              <span className="field-hint">多个维度请用英文逗号分隔，例如 dt, platform, channel。</span>
+            </label>
           </div>
-          <div className="form-group">
-            <label htmlFor="metricName">Metric Name:</label>
-            <input
-              type="text"
-              id="metricName"
-              name="metricName"
-              value={formData.metricName || ''}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="aggregationExpr">Aggregation Expression:</label>
+
+          <label className="field" htmlFor="aggregationExpr">
+            <span className="field-label">聚合表达式</span>
             <textarea
+              className="textarea"
               id="aggregationExpr"
               name="aggregationExpr"
               value={formData.aggregationExpr || ''}
               onChange={handleChange}
               required
             />
-          </div>
-          <div className="form-group">
-            <label htmlFor="timeGrain">Time Grain:</label>
-            <input
-              type="text"
-              id="timeGrain"
-              name="timeGrain"
-              value={formData.timeGrain || ''}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="dimensions">Dimensions (comma-separated):</label>
-            <input
-              type="text"
-              id="dimensions"
-              name="dimensions"
-              value={Array.isArray(formData.dimensions) ? formData.dimensions.join(', ') : ''}
-              onChange={(e) => handleDimensionsChange(e.target.value)}
-            />
-          </div>
+          </label>
+
           <div className="button-row">
-            <button type="submit" className="button primary" disabled={isSubmitting}>
+            <button type="submit" className="button" disabled={isSubmitting}>
               {isSubmitting ? '创建中...' : '创建观测点'}
             </button>
-            <a className="button secondary" href={withUserRoleQuery(tableId ? `/tables/${tableId}` : '/tables', role === 'dw_developer' || role === 'pm' ? role : undefined)}>
-              返回
+            <a className="button secondary" href={withUserRoleQuery(tableId ? `/tables/${tableId}` : '/tables', resolvedRole)}>
+              返回表详情
             </a>
           </div>
-          {error && <p className="error-message">{error}</p>}
+
+          {error ? <p className="inline-error">{error}</p> : null}
         </form>
       </section>
     </div>
@@ -157,7 +185,7 @@ function NewObservationPointPageContent() {
 
 export default function NewObservationPointPage() {
   return (
-    <Suspense fallback={<div className="grid">Loading...</div>}>
+    <Suspense fallback={<div className="status-message">加载中...</div>}>
       <NewObservationPointPageContent />
     </Suspense>
   );

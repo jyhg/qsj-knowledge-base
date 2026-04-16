@@ -78,7 +78,7 @@ export default function TableDetailPage() {
   }, [tableId]); // Re-fetch data if tableId changes
 
   if (!table) {
-    return <div>Loading...</div>; // Or a proper loading spinner
+    return <div className="status-message">加载中...</div>;
   }
 
   const handleDeleteTestCase = async (id: string) => {
@@ -119,7 +119,7 @@ export default function TableDetailPage() {
                   <th>通道</th>
                   <th>阈值</th>
                   <th>最近结果</th>
-                  <th>操作</th> {/* New column for actions */}
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,12 +135,13 @@ export default function TableDetailPage() {
                     <td>{getExecutionChannelLabel(testCase.channel)}</td>
                     <td>{testCase.thresholdDesc ?? "-"}</td>
                     <td>
-                      {testCase.lastResultStatus ? getManualRunResultLabel(testCase.lastResultStatus) : "-"} ·{" "}
-                      {formatDateTime(testCase.lastExecutedAt)}
+                      {testCase.lastResultStatus ? getManualRunResultLabel(testCase.lastResultStatus) : '-'} · {formatDateTime(testCase.lastExecutedAt)}
                     </td>
                     <td>
-                      <a className="button secondary small" href={withRole(`/test-cases/${testCase.id}`)}>编辑</a>
-                      <button className="button danger small" onClick={() => handleDeleteTestCase(testCase.id)}>删除</button>
+                      <div className="button-row">
+                        <a className="button secondary small" href={withRole(`/test-cases/${testCase.id}`)}>编辑</a>
+                        <button className="button danger small" onClick={() => handleDeleteTestCase(testCase.id)}>删除</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -292,13 +293,14 @@ export default function TableDetailPage() {
       <section className="panel">
         <div className="tabs">
           {Object.values(KnowledgeAssetTab).map((tab) => (
-            <span
+            <button
               key={tab}
               className={`tab ${activeTab === tab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab)}
+              type="button"
             >
               {tab}
-            </span>
+            </button>
           ))}
         </div>
         {renderContent()}

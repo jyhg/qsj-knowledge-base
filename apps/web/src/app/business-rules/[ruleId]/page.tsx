@@ -1,20 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { getBusinessRule, updateBusinessRule } from "../../../lib/api";
-import { BusinessRuleDetail } from "@qsj/shared-types";
-import { formatDateTime } from "../../../lib/table-first-presentation";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { BusinessRuleDetail } from '@qsj/shared-types';
+
+import { getBusinessRule, updateBusinessRule } from '../../../lib/api';
+import { formatDateTime, withUserRoleQuery } from '../../../lib/table-first-presentation';
 
 export default function BusinessRuleDetailPage() {
   const router = useRouter();
   const params = useParams<{ ruleId: string }>();
+  const searchParams = useSearchParams();
   const ruleId = params.ruleId;
+  const role = searchParams.get('role') ?? undefined;
   const [businessRule, setBusinessRule] = useState<BusinessRuleDetail | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<BusinessRuleDetail>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const resolvedRole = role === 'dw_developer' || role === 'pm' ? role : undefined;
 
   useEffect(() => {
     const fetchBusinessRule = async () => {
@@ -22,52 +28,52 @@ export default function BusinessRuleDetailPage() {
         setIsLoading(true);
         const data = await getBusinessRule(ruleId);
         setBusinessRule(data);
-        setFormData(data); // Initialize form data with fetched data
+        setFormData(data);
       } catch (err) {
-        setError("Failed to load business rule.");
+        setError('Failed to load business rule.');
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchBusinessRule();
   }, [ruleId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
+    setIsSubmitting(true);
+
     try {
-      setIsLoading(true);
-      if (ruleId) {
-        const updated = await updateBusinessRule(ruleId, formData);
-        setBusinessRule(updated);
-        setFormData(updated);
-        setIsEditing(false);
-        router.refresh(); // Refresh the page to reflect changes
-      }
+      const updated = await updateBusinessRule(ruleId, formData);
+      setBusinessRule(updated);
+      setFormData(updated);
+      setIsEditing(false);
+      router.refresh();
     } catch (err) {
-      setError("Failed to update business rule.");
+      setError('Failed to update business rule.');
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
-    return <div className="grid">Loading...</div>;
+    return <div className="status-message">加载中...</div>;
   }
 
-  if (error) {
-    return <div className="grid error">Error: {error}</div>;
+  if (error && !businessRule) {
+    return <div className="status-message error">{error}</div>;
   }
 
   if (!businessRule) {
-    return <div className="grid">Business Rule not found.</div>;
+    return <div className="status-message">未找到业务规则。</div>;
   }
 
   return (
@@ -75,125 +81,154 @@ export default function BusinessRuleDetailPage() {
       <section className="hero">
         <span className="eyebrow">Business Rule Detail</span>
         <h1>{businessRule.name}</h1>
+        <p>查看业务规则的语义、适用范围与排查建议，必要时切换到编辑态维护。</p>
         <div className="button-row">
-            <button className="button" onClick={() => setIsEditing(!isEditing)}>
-                {isEditing ? "取消编辑" : "编辑业务规则"}
-            </button>
+          <button className="button" onClick={() => setIsEditing((prev) => !prev)} type="button">
+            {isEditing ? '取消编辑' : '编辑业务规则'}
+          </button>
+          <a
+            className="button secondary"
+            href={withUserRoleQuery(`/tables/${businessRule.tableAssetId}`, resolvedRole)}
+          >
+            返回表详情
+          </a>
         </div>
       </section>
 
       {isEditing ? (
         <section className="panel">
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form-group">
-              <label htmlFor="name">Name:</label>
+          <h2 className="section-title">编辑业务规则</h2>
+          <form onSubmit={handleSubmit} className="grid">
+            <label className="field" htmlFor="name">
+              <span className="field-label">业务规则名称</span>
               <input
+                className="input"
                 type="text"
                 id="name"
                 name="name"
-                value={formData.name || ""}
+                value={formData.name || ''}
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div className="form-group">
-              <label htmlFor="semanticDesc">Semantic Description:</label>
+            </label>
+
+            <label className="field" htmlFor="semanticDesc">
+              <span className="field-label">规则语义</span>
               <textarea
+                className="textarea"
                 id="semanticDesc"
                 name="semanticDesc"
-                value={formData.semanticDesc || ""}
+                value={formData.semanticDesc || ''}
                 onChange={handleChange}
                 required
               />
+            </label>
+
+            <div className="grid cols-2">
+              <label className="field" htmlFor="applicableScope">
+                <span className="field-label">适用范围</span>
+                <textarea
+                  className="textarea"
+                  id="applicableScope"
+                  name="applicableScope"
+                  value={formData.applicableScope || ''}
+                  onChange={handleChange}
+                />
+              </label>
+              <label className="field" htmlFor="exceptionScope">
+                <span className="field-label">例外范围</span>
+                <textarea
+                  className="textarea"
+                  id="exceptionScope"
+                  name="exceptionScope"
+                  value={formData.exceptionScope || ''}
+                  onChange={handleChange}
+                />
+              </label>
             </div>
-            <div className="form-group">
-              <label htmlFor="applicableScope">Applicable Scope:</label>
-              <textarea
-                id="applicableScope"
-                name="applicableScope"
-                value={formData.applicableScope || ""}
-                onChange={handleChange}
-              />
+
+            <div className="grid cols-2">
+              <label className="field" htmlFor="commonCauses">
+                <span className="field-label">常见原因</span>
+                <textarea
+                  className="textarea"
+                  id="commonCauses"
+                  name="commonCauses"
+                  value={formData.commonCauses || ''}
+                  onChange={handleChange}
+                />
+              </label>
+              <label className="field" htmlFor="analysisHint">
+                <span className="field-label">排查建议</span>
+                <textarea
+                  className="textarea"
+                  id="analysisHint"
+                  name="analysisHint"
+                  value={formData.analysisHint || ''}
+                  onChange={handleChange}
+                />
+              </label>
             </div>
-            <div className="form-group">
-              <label htmlFor="exceptionScope">Exception Scope:</label>
-              <textarea
-                id="exceptionScope"
-                name="exceptionScope"
-                value={formData.exceptionScope || ""}
-                onChange={handleChange}
-              />
+
+            <div className="button-row">
+              <button type="submit" className="button" disabled={isSubmitting}>
+                {isSubmitting ? '保存中...' : '保存业务规则'}
+              </button>
+              <button className="button secondary" onClick={() => setIsEditing(false)} type="button">
+                取消
+              </button>
             </div>
-            <div className="form-group">
-              <label htmlFor="commonCauses">Common Causes:</label>
-              <textarea
-                id="commonCauses"
-                name="commonCauses"
-                value={formData.commonCauses || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="analysisHint">Analysis Hint:</label>
-              <textarea
-                id="analysisHint"
-                name="analysisHint"
-                value={formData.analysisHint || ""}
-                onChange={handleChange}
-              />
-            </div>
-            {/* observationIds and testCaseIds are arrays, simplifying for now */}
-            <button type="submit" className="button primary">保存</button>
-            {error && <p className="error-message">{error}</p>}
+
+            {error ? <p className="inline-error">{error}</p> : null}
           </form>
         </section>
       ) : (
         <section className="panel">
           <div className="list">
             <div className="list-item">
-              <strong>ID:</strong> {businessRule.id}
+              <strong>ID：</strong> {businessRule.id}
             </div>
             <div className="list-item">
-              <strong>Table Asset ID:</strong> {businessRule.tableAssetId}
+              <strong>表资产 ID：</strong> {businessRule.tableAssetId}
             </div>
             <div className="list-item">
-              <strong>Semantic Description:</strong> {businessRule.semanticDesc}
+              <strong>规则语义：</strong> {businessRule.semanticDesc}
             </div>
             <div className="list-item">
-              <strong>Applicable Scope:</strong> {businessRule.applicableScope ?? "-"}
+              <strong>适用范围：</strong> {businessRule.applicableScope ?? '-'}
             </div>
             <div className="list-item">
-              <strong>Exception Scope:</strong> {businessRule.exceptionScope ?? "-"}
+              <strong>例外范围：</strong> {businessRule.exceptionScope ?? '-'}
             </div>
             <div className="list-item">
-              <strong>Observation IDs:</strong> {businessRule.observationIds.join(", ")}
+              <strong>观测点 ID：</strong> {businessRule.observationIds.join(', ') || '-'}
             </div>
             <div className="list-item">
-              <strong>Test Case IDs:</strong> {businessRule.testCaseIds.join(", ")}
+              <strong>测试用例 ID：</strong> {businessRule.testCaseIds.join(', ') || '-'}
             </div>
             <div className="list-item">
-              <strong>Common Causes:</strong> {businessRule.commonCauses ?? "-"}
+              <strong>常见原因：</strong> {businessRule.commonCauses ?? '-'}
             </div>
             <div className="list-item">
-              <strong>Analysis Hint:</strong> {businessRule.analysisHint ?? "-"}
+              <strong>排查建议：</strong> {businessRule.analysisHint ?? '-'}
             </div>
             <div className="list-item">
-              <strong>Status:</strong> {businessRule.status}
+              <strong>状态：</strong> {businessRule.status}
             </div>
             <div className="list-item">
-              <strong>Git Path:</strong> {businessRule.gitPath}
+              <strong>Git Path：</strong> {businessRule.gitPath}
             </div>
             <div className="list-item">
-              <strong>Version No:</strong> {businessRule.versionNo}
+              <strong>Version No：</strong> {businessRule.versionNo}
             </div>
             <div className="list-item">
-              <strong>Created By:</strong> {businessRule.createdBy}
+              <strong>Created By：</strong> {businessRule.createdBy}
             </div>
             <div className="list-item">
-              <strong>Created At:</strong> {formatDateTime(businessRule.createdAt)}
+              <strong>Created At：</strong> {formatDateTime(businessRule.createdAt)}
             </div>
             <div className="list-item">
-              <strong>Updated At:</strong> {formatDateTime(businessRule.updatedAt)}
+              <strong>Updated At：</strong> {formatDateTime(businessRule.updatedAt)}
             </div>
           </div>
         </section>

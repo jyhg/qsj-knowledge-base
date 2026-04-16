@@ -1,20 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { getTestCase, updateTestCase } from "../../../lib/api";
-import { TestCaseDetail } from "@qsj/shared-types";
-import { formatDateTime } from "../../../lib/table-first-presentation";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { TestCaseDetail } from '@qsj/shared-types';
+
+import { getTestCase, updateTestCase } from '../../../lib/api';
+import { formatDateTime, withUserRoleQuery } from '../../../lib/table-first-presentation';
 
 export default function TestCaseDetailPage() {
   const router = useRouter();
   const params = useParams<{ testCaseId: string }>();
+  const searchParams = useSearchParams();
   const testCaseId = params.testCaseId;
+  const role = searchParams.get('role') ?? undefined;
   const [testCase, setTestCase] = useState<TestCaseDetail | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<TestCaseDetail>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const resolvedRole = role === 'dw_developer' || role === 'pm' ? role : undefined;
 
   useEffect(() => {
     const fetchTestCase = async () => {
@@ -22,56 +28,56 @@ export default function TestCaseDetailPage() {
         setIsLoading(true);
         const data = await getTestCase(testCaseId);
         setTestCase(data);
-        setFormData(data); // Initialize form data with fetched data
+        setFormData(data);
       } catch (err) {
-        setError("Failed to load test case.");
+        setError('Failed to load test case.');
         console.error(err);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchTestCase();
   }, [testCaseId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+  const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = event.target;
     if (type === 'checkbox') {
-        setFormData((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-    } else {
-        setFormData((prev) => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: (event.target as HTMLInputElement).checked }));
+      return;
     }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError(null);
+    setIsSubmitting(true);
+
     try {
-      setIsLoading(true);
-      if (testCaseId) {
-        const updated = await updateTestCase(testCaseId, formData);
-        setTestCase(updated);
-        setFormData(updated);
-        setIsEditing(false);
-        router.refresh(); // Refresh the page to reflect changes
-      }
+      const updated = await updateTestCase(testCaseId, formData);
+      setTestCase(updated);
+      setFormData(updated);
+      setIsEditing(false);
+      router.refresh();
     } catch (err) {
-      setError("Failed to update test case.");
+      setError('Failed to update test case.');
       console.error(err);
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
-    return <div className="grid">Loading...</div>;
+    return <div className="status-message">加载中...</div>;
   }
 
-  if (error) {
-    return <div className="grid error">Error: {error}</div>;
+  if (error && !testCase) {
+    return <div className="status-message error">{error}</div>;
   }
 
   if (!testCase) {
-    return <div className="grid">Test Case not found.</div>;
+    return <div className="status-message">未找到测试用例。</div>;
   }
 
   return (
@@ -79,168 +85,210 @@ export default function TestCaseDetailPage() {
       <section className="hero">
         <span className="eyebrow">Test Case Detail</span>
         <h1>{testCase.name}</h1>
+        <p>查看测试用例的执行逻辑、阈值、执行通道和版本信息，必要时切换到编辑态维护。</p>
         <div className="button-row">
-            <button className="button" onClick={() => setIsEditing(!isEditing)}>
-                {isEditing ? "取消编辑" : "编辑测试用例"}
-            </button>
+          <button className="button" onClick={() => setIsEditing((prev) => !prev)} type="button">
+            {isEditing ? '取消编辑' : '编辑测试用例'}
+          </button>
+          <a
+            className="button secondary"
+            href={withUserRoleQuery(`/tables/${testCase.tableAssetId}`, resolvedRole)}
+          >
+            返回表详情
+          </a>
         </div>
       </section>
 
       {isEditing ? (
         <section className="panel">
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form-group">
-              <label htmlFor="name">Name:</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name || ""}
-                onChange={handleChange}
-                required
-              />
+          <h2 className="section-title">编辑测试用例</h2>
+          <form onSubmit={handleSubmit} className="grid">
+            <div className="grid cols-2">
+              <label className="field" htmlFor="name">
+                <span className="field-label">测试用例名称</span>
+                <input
+                  className="input"
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name || ''}
+                  onChange={handleChange}
+                  required
+                />
+              </label>
+              <label className="field" htmlFor="riskLevel">
+                <span className="field-label">风险等级</span>
+                <select
+                  className="select"
+                  id="riskLevel"
+                  name="riskLevel"
+                  value={formData.riskLevel || 'low'}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="low">低</option>
+                  <option value="medium">中</option>
+                  <option value="high">高</option>
+                </select>
+              </label>
             </div>
-            <div className="form-group">
-              <label htmlFor="logicDesc">Logic Description:</label>
+
+            <label className="field" htmlFor="logicDesc">
+              <span className="field-label">校验逻辑说明</span>
               <textarea
+                className="textarea"
                 id="logicDesc"
                 name="logicDesc"
-                value={formData.logicDesc || ""}
+                value={formData.logicDesc || ''}
                 onChange={handleChange}
                 required
               />
+            </label>
+
+            <div className="grid cols-2">
+              <label className="field" htmlFor="thresholdDesc">
+                <span className="field-label">阈值说明</span>
+                <input
+                  className="input"
+                  type="text"
+                  id="thresholdDesc"
+                  name="thresholdDesc"
+                  value={formData.thresholdDesc || ''}
+                  onChange={handleChange}
+                />
+              </label>
+              <label className="field" htmlFor="oneServiceParser">
+                <span className="field-label">one service 结果解析器</span>
+                <input
+                  className="input"
+                  type="text"
+                  id="oneServiceParser"
+                  name="oneServiceParser"
+                  value={formData.oneServiceParser || ''}
+                  onChange={handleChange}
+                />
+              </label>
             </div>
-            <div className="form-group">
-              <label htmlFor="thresholdDesc">Threshold Description:</label>
-              <input
-                type="text"
-                id="thresholdDesc"
-                name="thresholdDesc"
-                value={formData.thresholdDesc || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="sqlTemplate">SQL Template:</label>
+
+            <label className="field" htmlFor="sqlTemplate">
+              <span className="field-label">SQL 模板</span>
               <textarea
+                className="textarea"
                 id="sqlTemplate"
                 name="sqlTemplate"
-                value={formData.sqlTemplate || ""}
+                value={formData.sqlTemplate || ''}
                 onChange={handleChange}
                 required
               />
+            </label>
+
+            <div className="grid cols-2">
+              <label className="field-toggle" htmlFor="supportsOneService">
+                <input
+                  type="checkbox"
+                  id="supportsOneService"
+                  name="supportsOneService"
+                  checked={formData.supportsOneService || false}
+                  onChange={handleChange}
+                />
+                <span>
+                  <strong>支持 one service</strong>
+                  <span>允许在取数分析和开发自测时手动执行。</span>
+                </span>
+              </label>
+              <label className="field-toggle" htmlFor="supportsDqc">
+                <input
+                  type="checkbox"
+                  id="supportsDqc"
+                  name="supportsDqc"
+                  checked={formData.supportsDqc || false}
+                  onChange={handleChange}
+                />
+                <span>
+                  <strong>支持 DQC</strong>
+                  <span>允许在后续回填流程中映射为长期监控规则。</span>
+                </span>
+              </label>
             </div>
-            <div className="form-group checkbox">
+
+            <label className="field" htmlFor="dqcTemplateType">
+              <span className="field-label">DQC 模板类型</span>
               <input
-                type="checkbox"
-                id="supportsOneService"
-                name="supportsOneService"
-                checked={formData.supportsOneService || false}
-                onChange={handleChange}
-              />
-              <label htmlFor="supportsOneService">Supports One Service</label>
-            </div>
-            <div className="form-group checkbox">
-              <input
-                type="checkbox"
-                id="supportsDqc"
-                name="supportsDqc"
-                checked={formData.supportsDqc || false}
-                onChange={handleChange}
-              />
-              <label htmlFor="supportsDqc">Supports DQC</label>
-            </div>
-            <div className="form-group">
-              <label htmlFor="oneServiceParser">One Service Parser:</label>
-              <input
-                type="text"
-                id="oneServiceParser"
-                name="oneServiceParser"
-                value={formData.oneServiceParser || ""}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="dqcTemplateType">DQC Template Type:</label>
-              <input
+                className="input"
                 type="text"
                 id="dqcTemplateType"
                 name="dqcTemplateType"
-                value={formData.dqcTemplateType || ""}
+                value={formData.dqcTemplateType || ''}
                 onChange={handleChange}
               />
+            </label>
+
+            <div className="button-row">
+              <button type="submit" className="button" disabled={isSubmitting}>
+                {isSubmitting ? '保存中...' : '保存测试用例'}
+              </button>
+              <button className="button secondary" onClick={() => setIsEditing(false)} type="button">
+                取消
+              </button>
             </div>
-            <div className="form-group">
-              <label htmlFor="riskLevel">Risk Level:</label>
-              <select
-                id="riskLevel"
-                name="riskLevel"
-                value={formData.riskLevel || "low"}
-                onChange={handleChange}
-                required
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-            </div>
-            <button type="submit" className="button primary">保存</button>
-            {error && <p className="error-message">{error}</p>}
+
+            {error ? <p className="inline-error">{error}</p> : null}
           </form>
         </section>
       ) : (
         <section className="panel">
           <div className="list">
             <div className="list-item">
-              <strong>ID:</strong> {testCase.id}
+              <strong>ID：</strong> {testCase.id}
             </div>
             <div className="list-item">
-              <strong>Table Asset ID:</strong> {testCase.tableAssetId}
+              <strong>表资产 ID：</strong> {testCase.tableAssetId}
             </div>
             <div className="list-item">
-              <strong>Type:</strong> {testCase.testCaseType}
+              <strong>类型：</strong> {testCase.testCaseType}
             </div>
             <div className="list-item">
-              <strong>Logic Description:</strong> {testCase.logicDesc}
+              <strong>校验逻辑说明：</strong> {testCase.logicDesc}
             </div>
             <div className="list-item">
-              <strong>Threshold Description:</strong> {testCase.thresholdDesc ?? "-"}
+              <strong>阈值说明：</strong> {testCase.thresholdDesc ?? '-'}
             </div>
             <div className="list-item">
-              <strong>SQL Template:</strong> <pre>{testCase.sqlTemplate}</pre>
+              <strong>SQL 模板：</strong>
+              <pre className="code code-block">{testCase.sqlTemplate}</pre>
             </div>
             <div className="list-item">
-              <strong>Supports One Service:</strong> {testCase.supportsOneService ? "Yes" : "No"}
+              <strong>支持 one service：</strong> {testCase.supportsOneService ? 'Yes' : 'No'}
             </div>
             <div className="list-item">
-              <strong>Supports DQC:</strong> {testCase.supportsDqc ? "Yes" : "No"}
+              <strong>支持 DQC：</strong> {testCase.supportsDqc ? 'Yes' : 'No'}
             </div>
             <div className="list-item">
-              <strong>One Service Parser:</strong> {testCase.oneServiceParser ?? "-"}
+              <strong>one service 结果解析器：</strong> {testCase.oneServiceParser ?? '-'}
             </div>
             <div className="list-item">
-              <strong>DQC Template Type:</strong> {testCase.dqcTemplateType ?? "-"}
+              <strong>DQC 模板类型：</strong> {testCase.dqcTemplateType ?? '-'}
             </div>
             <div className="list-item">
-              <strong>Risk Level:</strong> {testCase.riskLevel}
+              <strong>风险等级：</strong> {testCase.riskLevel}
             </div>
             <div className="list-item">
-              <strong>Status:</strong> {testCase.status}
+              <strong>状态：</strong> {testCase.status}
             </div>
             <div className="list-item">
-              <strong>Git Path:</strong> {testCase.gitPath}
+              <strong>Git Path：</strong> {testCase.gitPath}
             </div>
             <div className="list-item">
-              <strong>Version No:</strong> {testCase.versionNo}
+              <strong>Version No：</strong> {testCase.versionNo}
             </div>
             <div className="list-item">
-              <strong>Created By:</strong> {testCase.createdBy}
+              <strong>Created By：</strong> {testCase.createdBy}
             </div>
             <div className="list-item">
-              <strong>Created At:</strong> {formatDateTime(testCase.createdAt)}
+              <strong>Created At：</strong> {formatDateTime(testCase.createdAt)}
             </div>
             <div className="list-item">
-              <strong>Updated At:</strong> {formatDateTime(testCase.updatedAt)}
+              <strong>Updated At：</strong> {formatDateTime(testCase.updatedAt)}
             </div>
           </div>
         </section>
