@@ -1,45 +1,92 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { TableAssetDetail } from "@qsj/shared-types";
 
 import {
-  businessRules,
-  dqcDeployments,
-  observationPoints,
-  tableAssets,
-  testCases
+  tableAssets as mockTableAssets,
+  testCases as mockTestCases,
+  observationPoints as mockObservationPoints,
+  businessRules as mockBusinessRules,
+  dqcDeployments
 } from "../../data/mock-store.js";
 
 @Injectable()
 export class TablesService {
-  list() {
-    return tableAssets;
+  async list(): Promise<TableAssetDetail[]> {
+    return mockTableAssets;
   }
 
-  get(tableId: string) {
-    const table = tableAssets.find((item) => item.id === tableId);
+  async get(tableId: string): Promise<TableAssetDetail> {
+    const table = mockTableAssets.find((item) => item.id === tableId);
     if (!table) {
       throw new NotFoundException("TABLE_ASSET_NOT_FOUND");
     }
     return table;
   }
 
-  listTestCases(tableId: string) {
-    this.get(tableId);
-    return testCases.filter((item) => item.tableAssetId === tableId);
+  async create(createTableAssetDto: Partial<TableAssetDetail>): Promise<TableAssetDetail> {
+    const now = new Date().toISOString();
+    const created: TableAssetDetail = {
+      id: `tbl_${Date.now()}`,
+      tableName: createTableAssetDto.tableName ?? "",
+      displayName: createTableAssetDto.displayName ?? "",
+      domainCode: createTableAssetDto.domainCode ?? null,
+      description: createTableAssetDto.description ?? null,
+      riskLevel: createTableAssetDto.riskLevel ?? "low",
+      ownerUserId: createTableAssetDto.ownerUserId ?? null,
+      status: createTableAssetDto.status ?? "draft",
+      currentVersionId: null,
+      currentVersionNo: 1,
+      observationPointCount: 0,
+      testCaseCount: 0,
+      businessRuleCount: 0,
+      dqcDeploymentCount: 0,
+      lastAbnormalAt: null,
+      oneServiceOnlyCaseCount: 0,
+      dualChannelCaseCount: 0,
+      latestVersionSha: null,
+      createdBy: createTableAssetDto.createdBy ?? "system",
+      createdAt: now,
+      updatedAt: now,
+    };
+    mockTableAssets.unshift(created);
+    return created;
   }
 
-  listObservations(tableId: string) {
-    this.get(tableId);
-    return observationPoints.filter((item) => item.tableAssetId === tableId);
+  async update(tableId: string, updateTableAssetDto: Partial<TableAssetDetail>): Promise<TableAssetDetail> {
+    const index = mockTableAssets.findIndex((item) => item.id === tableId);
+    if (index < 0) {
+      throw new NotFoundException(`Table Asset with ID ${tableId} not found`);
+    }
+    const updated = { ...mockTableAssets[index], ...updateTableAssetDto, updatedAt: new Date().toISOString() };
+    mockTableAssets.splice(index, 1, updated);
+    return updated;
   }
 
-  listBusinessRules(tableId: string) {
-    this.get(tableId);
-    return businessRules.filter((item) => item.tableAssetId === tableId);
+  async remove(id: string): Promise<void> {
+    const index = mockTableAssets.findIndex((item) => item.id === id);
+    if (index >= 0) {
+      mockTableAssets.splice(index, 1);
+    }
   }
 
-  getExecutionPublish(tableId: string) {
-    const table = this.get(tableId);
-    const relatedTestCases = this.listTestCases(tableId);
+  async listTestCases(tableId: string) {
+    await this.get(tableId);
+    return mockTestCases.filter((item) => item.tableAssetId === tableId);
+  }
+
+  async listObservations(tableId: string) {
+    await this.get(tableId);
+    return mockObservationPoints.filter((item) => item.tableAssetId === tableId);
+  }
+
+  async listBusinessRules(tableId: string) {
+    await this.get(tableId);
+    return mockBusinessRules.filter((item) => item.tableAssetId === tableId);
+  }
+
+  async getExecutionPublish(tableId: string) {
+    const table = await this.get(tableId);
+    const relatedTestCases = await this.listTestCases(tableId);
     const relatedDeployments = dqcDeployments.filter((item) => item.tableAssetId === tableId);
 
     return {

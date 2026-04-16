@@ -20,7 +20,8 @@ import type {
   TaskResultPayload,
   TaskRunSummary,
   TestCaseDetail,
-  User
+  User,
+  UserRole
 } from "@qsj/shared-types";
 
 import {
@@ -44,7 +45,10 @@ import {
   demoUser
 } from "./demo-data";
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3001/api/v1";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  process.env.API_BASE_URL ??
+  "http://localhost:3001/api/v1";
 
 async function requestJson<T>(path: string, fallback: T, init?: RequestInit): Promise<T> {
   try {
@@ -61,6 +65,14 @@ async function requestJson<T>(path: string, fallback: T, init?: RequestInit): Pr
   }
 }
 
+function buildRoleQuery(role?: UserRole): string {
+  if (!role) {
+    return "";
+  }
+
+  return `?role=${encodeURIComponent(role)}`;
+}
+
 async function submitJson<T>(path: string, init: RequestInit): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -75,11 +87,15 @@ async function submitJson<T>(path: string, init: RequestInit): Promise<T> {
     throw new Error(`API_REQUEST_FAILED:${path}`);
   }
 
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
 }
 
-export function getCurrentUser(): Promise<User> {
-  return requestJson("/me", demoUser);
+export function getCurrentUser(role?: UserRole): Promise<User> {
+  return requestJson(`/me${buildRoleQuery(role)}`, demoUser);
 }
 
 // New table-first APIs
@@ -93,9 +109,38 @@ export async function getTableAsset(tableId: string): Promise<TableAssetDetail> 
   return requestJson(`/tables/${tableId}`, fallback);
 }
 
+export async function updateTableAsset(tableId: string, input: Partial<TableAssetDetail>): Promise<TableAssetDetail> {
+  const fallback = demoTableAssets.find((item) => item.id === tableId) ?? demoTableAssets[0];
+  return submitJson(`/tables/${tableId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+}
+
 export async function listTableTestCases(tableId: string): Promise<TestCaseDetail[]> {
   const fallback = demoTestCases.filter((item) => item.tableAssetId === tableId);
   return requestJson(`/tables/${tableId}/test-cases`, fallback);
+}
+
+export async function getTestCase(testCaseId: string): Promise<TestCaseDetail> {
+  const fallback = demoTestCases.find((item) => item.id === testCaseId) ?? demoTestCases[0];
+  return requestJson(`/test-cases/${testCaseId}`, fallback);
+}
+
+export async function createTestCase(input: Partial<TestCaseDetail>): Promise<TestCaseDetail> {
+  const fallback = demoTestCases[0];
+  return submitJson(`/test-cases`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function updateTestCase(testCaseId: string, input: Partial<TestCaseDetail>): Promise<TestCaseDetail> {
+  const fallback = demoTestCases.find((item) => item.id === testCaseId) ?? demoTestCases[0];
+  return submitJson(`/test-cases/${testCaseId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
 }
 
 export async function listTableObservationPoints(tableId: string): Promise<ObservationPoint[]> {
@@ -103,9 +148,75 @@ export async function listTableObservationPoints(tableId: string): Promise<Obser
   return requestJson(`/tables/${tableId}/observations`, fallback);
 }
 
+export async function getObservationPoint(observationId: string): Promise<ObservationPoint> {
+  const fallback = demoObservationPoints.find((item) => item.id === observationId) ?? demoObservationPoints[0];
+  return requestJson(`/observations/${observationId}`, fallback);
+}
+
+export async function createObservationPoint(input: Partial<ObservationPoint>): Promise<ObservationPoint> {
+  const fallback = demoObservationPoints[0];
+  return submitJson(`/observations`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function updateObservationPoint(observationId: string, input: Partial<ObservationPoint>): Promise<ObservationPoint> {
+  const fallback = demoObservationPoints.find((item) => item.id === observationId) ?? demoObservationPoints[0];
+  return submitJson(`/observations/${observationId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+}
+
 export async function listTableBusinessRules(tableId: string): Promise<BusinessRuleDetail[]> {
   const fallback = demoBusinessRules.filter((item) => item.tableAssetId === tableId);
   return requestJson(`/tables/${tableId}/business-rules`, fallback);
+}
+
+export async function getBusinessRule(ruleId: string): Promise<BusinessRuleDetail> {
+  const fallback = demoBusinessRules.find((item) => item.id === ruleId) ?? demoBusinessRules[0];
+  return requestJson(`/business-rules/${ruleId}`, fallback);
+}
+
+export async function createBusinessRule(input: Partial<BusinessRuleDetail>): Promise<BusinessRuleDetail> {
+  const fallback = demoBusinessRules[0];
+  return submitJson(`/business-rules`, {
+    method: "POST",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function updateBusinessRule(ruleId: string, input: Partial<BusinessRuleDetail>): Promise<BusinessRuleDetail> {
+  const fallback = demoBusinessRules.find((item) => item.id === ruleId) ?? demoBusinessRules[0];
+  return submitJson(`/business-rules/${ruleId}`, {
+    method: "PATCH",
+    body: JSON.stringify(input)
+  });
+}
+
+export async function deleteTestCase(testCaseId: string): Promise<void> {
+  return submitJson(`/test-cases/${testCaseId}`, {
+    method: "DELETE"
+  });
+}
+
+export async function deleteObservationPoint(observationId: string): Promise<void> {
+  return submitJson(`/observations/${observationId}`, {
+    method: "DELETE"
+  });
+}
+
+export async function deleteBusinessRule(ruleId: string): Promise<void> {
+  return submitJson(`/business-rules/${ruleId}`, {
+    method: "DELETE"
+  });
+}
+
+export async function deleteTableAsset(tableId: string): Promise<void> {
+  return submitJson(`/tables/${tableId}`, {
+    method: "DELETE"
+  });
 }
 
 export async function getExecutionPublishSummary(tableId: string): Promise<{

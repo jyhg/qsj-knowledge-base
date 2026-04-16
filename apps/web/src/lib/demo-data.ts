@@ -45,7 +45,10 @@ export const demoTableAssets: TableAssetDetail[] = [
     lastAbnormalAt: "2026-04-14T16:10:00.000Z",
     oneServiceOnlyCaseCount: 2,
     dualChannelCaseCount: 1,
-    latestVersionSha: "9b5a4a8"
+    latestVersionSha: "9b5a4a8",
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-01T09:00:00.000Z",
+    updatedAt: "2026-04-14T16:10:00.000Z"
   }
 ];
 
@@ -63,7 +66,10 @@ export const demoObservationPoints: ObservationPoint[] = [
     sceneTags: ["analysis_validation", "development_self_test"],
     status: "active",
     gitPath: "knowledge-assets/observation-points/op_1.yaml",
-    versionNo: 3
+    versionNo: 3,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-10T10:00:00.000Z",
+    updatedAt: "2026-04-14T16:10:00.000Z"
   }
 ];
 
@@ -89,7 +95,10 @@ export const demoTestCases: TestCaseDetail[] = [
     sqlTemplate: "select platform, play_type, operate_mode, conversion_rate from ...",
     businessRuleIds: ["br_1"],
     gitPath: "knowledge-assets/test-cases/tc_1.yaml",
-    versionNo: 2
+    versionNo: 2,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-11T09:30:00.000Z",
+    updatedAt: "2026-04-14T16:10:00.000Z"
   },
   {
     id: "tc_2",
@@ -112,7 +121,10 @@ export const demoTestCases: TestCaseDetail[] = [
     sqlTemplate: "select ...",
     businessRuleIds: ["br_2"],
     gitPath: "knowledge-assets/test-cases/tc_2.yaml",
-    versionNo: 4
+    versionNo: 4,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-09T15:20:00.000Z",
+    updatedAt: "2026-04-14T15:40:00.000Z"
   }
 ];
 
@@ -130,7 +142,10 @@ export const demoBusinessRules: BusinessRuleDetail[] = [
     commonCauses: "流量分类错误、归因口径错误、样本范围异常",
     analysisHint: "优先排查 operate_mode 映射与转化归因 SQL",
     gitPath: "knowledge-assets/business-rules/br_1.yaml",
-    versionNo: 2
+    versionNo: 2,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-08T11:00:00.000Z",
+    updatedAt: "2026-04-14T16:10:00.000Z"
   }
 ];
 

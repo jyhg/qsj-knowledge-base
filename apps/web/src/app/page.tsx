@@ -9,12 +9,21 @@ import {
 import {
   formatDateTime,
   getManualRunBatchStatusLabel,
-  getRiskLabel
+  getRiskLabel,
+  getUserRoleLabel,
+  resolveUserRole,
+  withUserRoleQuery
 } from "../lib/table-first-presentation";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams
+}: {
+  searchParams?: Promise<{ role?: string | string[] }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const currentRole = resolveUserRole(resolvedSearchParams?.role);
   const [user, tables, notifications, versions, latestRun, dqcDiffs] = await Promise.all([
-    getCurrentUser(),
+    getCurrentUser(currentRole),
     listTableAssets(),
     listNotifications(),
     listGitVersions(),
@@ -29,6 +38,7 @@ export default async function HomePage() {
         <h1>数仓测试用例知识库与验数运营台</h1>
         <p>
           UI 已切到“表”为第一入口，围绕表资产、one service 手动验数、DQC 回填与 Git 版本追踪组织主流程。
+          PM 与数仓开发在知识资产维护上完全同权，统一在表详情页维护观测点、测试用例和业务规则。
         </p>
       </section>
 
@@ -36,7 +46,7 @@ export default async function HomePage() {
         <div className="panel">
           <h2 className="section-title">核心入口</h2>
           <div className="button-row">
-            <a className="button" href="/tables">
+            <a className="button" href={withUserRoleQuery('/tables', currentRole)}>
               表资产
             </a>
             <a className="button secondary" href="/manual-runs/new">
@@ -54,7 +64,16 @@ export default async function HomePage() {
           <h2 className="section-title">当前角色</h2>
           <div className="stat">
             <span className="stat-value">{user.name}</span>
-            <span className="muted">角色：数仓开发</span>
+            <span className="muted">角色：{getUserRoleLabel(user.role)}</span>
+          </div>
+          <p className="muted">当前角色可在表详情页维护观测点、测试用例、业务规则；执行 one service、DQC 同步与回滚仍按单独权限控制。</p>
+          <div className="button-row" style={{ marginTop: '0.75rem' }}>
+            <a className={`button ${user.role === 'dw_developer' ? 'secondary' : ''}`} href={withUserRoleQuery('/', 'dw_developer')}>
+              切换为数仓开发视角
+            </a>
+            <a className={`button ${user.role === 'pm' ? 'secondary' : ''}`} href={withUserRoleQuery('/', 'pm')}>
+              切换为 PM 视角
+            </a>
           </div>
         </div>
       </section>
@@ -82,12 +101,12 @@ export default async function HomePage() {
           </a>
         </div>
         <div className="list">
-          <a className="list-item" href="/tables">
+          <a className="list-item" href={withUserRoleQuery('/tables', currentRole)}>
             <div className="row wrap">
               <strong>表资产</strong>
               <span className="chip">{tables.reduce((sum, item) => sum + item.testCaseCount, 0)} 条测试用例</span>
             </div>
-            <p className="muted">按表汇总查看观测点、测试用例、业务规则、执行记录与版本。</p>
+            <p className="muted">按表汇总查看观测点、测试用例、业务规则、执行记录与版本；进入任一表详情后，PM 与数仓开发都可直接维护这些知识资产。</p>
           </a>
           <a className="list-item" href="/manual-runs/new">
             <div className="row wrap">
@@ -148,13 +167,13 @@ export default async function HomePage() {
         <div className="panel">
           <div className="row wrap">
             <h2 className="section-title">高风险表快照</h2>
-            <a className="button secondary" href="/tables">
+            <a className="button secondary" href={withUserRoleQuery('/tables', currentRole)}>
               查看全部表
             </a>
           </div>
           <div className="list">
             {tables.map((table) => (
-              <a key={table.id} className="list-item" href={`/tables/${table.id}`}>
+              <a key={table.id} className="list-item" href={withUserRoleQuery(`/tables/${table.id}`, currentRole)}>
                 <div className="row wrap">
                   <strong>{table.tableName}</strong>
                   <span className={`badge risk-${table.riskLevel}`}>{getRiskLabel(table.riskLevel)}</span>

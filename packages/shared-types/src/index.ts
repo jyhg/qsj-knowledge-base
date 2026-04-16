@@ -87,6 +87,9 @@ export interface TableAssetDetail extends TableAssetSummary {
   oneServiceOnlyCaseCount: number;
   dualChannelCaseCount: number;
   latestVersionSha?: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ObservationPoint {
@@ -103,6 +106,9 @@ export interface ObservationPoint {
   status: AssetStatus;
   gitPath: string;
   versionNo: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TestCaseSummary {
@@ -123,6 +129,9 @@ export interface TestCaseSummary {
   status: AssetStatus;
   lastResultStatus?: ManualRunResultStatus | null;
   lastExecutedAt?: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TestCaseDetail extends TestCaseSummary {
@@ -142,6 +151,9 @@ export interface BusinessRuleSummary {
   observationIds: string[];
   testCaseIds: string[];
   status: AssetStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BusinessRuleDetail extends BusinessRuleSummary {

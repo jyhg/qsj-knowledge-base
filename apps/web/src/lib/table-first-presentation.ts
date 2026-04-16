@@ -6,7 +6,8 @@ import type {
   ManualRunBatch,
   ManualRunResultStatus,
   ManualRunScene,
-  NotificationItem
+  NotificationItem,
+  UserRole
 } from "@qsj/shared-types";
 
 const riskLabels = {
@@ -59,6 +60,11 @@ const dqcActionLabels: Record<DqcSuggestedAction, string> = {
   unchanged: "保持不变"
 };
 
+const roleLabels: Record<UserRole, string> = {
+  dw_developer: "数仓开发",
+  pm: "PM"
+};
+
 const notificationStatusLabels: Record<NonNullable<NotificationItem["status"]>, string> = {
   unread: "未读",
   read: "已读"
@@ -94,6 +100,28 @@ export function getDqcPublishStatusLabel(status: DqcPublishStatus) {
 
 export function getDqcSuggestedActionLabel(action: DqcSuggestedAction) {
   return dqcActionLabels[action];
+}
+
+export function getUserRoleLabel(role: UserRole) {
+  return roleLabels[role];
+}
+
+export function resolveUserRole(role?: string | string[] | null): UserRole | undefined {
+  const resolvedRole = Array.isArray(role) ? role[0] : role;
+
+  if (resolvedRole === "dw_developer" || resolvedRole === "pm") {
+    return resolvedRole;
+  }
+
+  return undefined;
+}
+
+export function withUserRoleQuery(path: string, role?: UserRole) {
+  if (!role) {
+    return path;
+  }
+
+  return `${path}${path.includes("?") ? "&" : "?"}role=${role}`;
 }
 
 export function getNotificationStatusLabel(status?: NotificationItem["status"]) {

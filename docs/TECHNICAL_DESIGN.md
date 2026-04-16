@@ -249,7 +249,7 @@ apps/api/db/
 | `/` | 工作台 | 数仓开发/PM | 首页 |
 | `/tables` | 表列表 | 数仓开发/PM | 表资产第一入口 |
 | `/tables/[tableId]` | 表详情 | 数仓开发/PM | 顶部摘要 + Tabs |
-| `/tables/[tableId]/edit` | 表资产编辑 | 数仓开发 | 编辑表级资产 |
+| `/tables/[tableId]/edit` | 表资产编辑 | 数仓开发/PM | 编辑表级资产 |
 | `/observations/[observationId]` | 观测点详情 | 数仓开发/PM | 观测点详情与编辑抽屉入口 |
 | `/test-cases/[testCaseId]` | 测试用例详情 | 数仓开发/PM | 测试用例详情与编辑抽屉入口 |
 | `/business-rules/[ruleId]` | 业务规则详情 | 数仓开发/PM | 业务规则详情与编辑抽屉入口 |
@@ -1059,9 +1059,10 @@ interface GitAdapter {
 | 动作 | 数仓开发 | PM |
 | --- | --- | --- |
 | 查看表资产 | Y | Y |
-| 编辑观测点 | Y | N |
-| 编辑测试用例 | Y | N |
-| 编辑业务规则草稿 | Y | Y |
+| 编辑观测点 | Y | Y |
+| 编辑测试用例 | Y | Y |
+| 编辑业务规则 | Y | Y |
+| 删除观测点 / 测试用例 / 业务规则 | Y | Y |
 | 触发 `one service` 执行 | Y | N |
 | 查看执行结果 | Y | Y |
 | 确认回写 | Y | N |

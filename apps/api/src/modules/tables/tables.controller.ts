@@ -1,4 +1,5 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Delete, HttpCode, HttpStatus } from "@nestjs/common";
+import { TableAssetDetail } from "@qsj/shared-types";
 
 import { TablesService } from "./tables.service.js";
 
@@ -11,9 +12,28 @@ export class TablesController {
     return this.tablesService.list();
   }
 
+  @Post()
+  create(@Body() body: Partial<TableAssetDetail>) {
+    return this.tablesService.create(body);
+  }
+
   @Get(":tableId")
   get(@Param("tableId") tableId: string) {
     return this.tablesService.get(tableId);
+  }
+
+  @Patch(":tableId")
+  update(
+    @Param("tableId") tableId: string,
+    @Body() body: Partial<TableAssetDetail>
+  ) {
+    return this.tablesService.update(tableId, body);
+  }
+
+  @Delete(":tableId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param("tableId") tableId: string) {
+    return this.tablesService.remove(tableId);
   }
 
   @Get(":tableId/test-cases")

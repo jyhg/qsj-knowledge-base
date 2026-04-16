@@ -46,7 +46,10 @@ export const tableAssets: TableAssetDetail[] = [
     lastAbnormalAt: "2026-04-14T16:10:00.000Z",
     oneServiceOnlyCaseCount: 2,
     dualChannelCaseCount: 1,
-    latestVersionSha: "9b5a4a8"
+    latestVersionSha: "9b5a4a8",
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "tbl_ads_app_qsj_zz_secondhand",
@@ -66,7 +69,10 @@ export const tableAssets: TableAssetDetail[] = [
     lastAbnormalAt: null,
     oneServiceOnlyCaseCount: 0,
     dualChannelCaseCount: 1,
-    latestVersionSha: "9b5a4a8"
+    latestVersionSha: "9b5a4a8",
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   }
 ];
 
@@ -84,7 +90,10 @@ export const observationPoints: ObservationPoint[] = [
     sceneTags: ["analysis_validation", "development_self_test"],
     status: "active",
     gitPath: "knowledge-assets/observation-points/op_1.yaml",
-    versionNo: 3
+    versionNo: 3,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "op_2",
@@ -99,7 +108,10 @@ export const observationPoints: ObservationPoint[] = [
     sceneTags: ["analysis_validation", "development_self_test"],
     status: "active",
     gitPath: "knowledge-assets/observation-points/op_2.yaml",
-    versionNo: 2
+    versionNo: 2,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "op_3",
@@ -114,7 +126,10 @@ export const observationPoints: ObservationPoint[] = [
     sceneTags: ["analysis_validation", "development_self_test"],
     status: "active",
     gitPath: "knowledge-assets/observation-points/op_3.yaml",
-    versionNo: 1
+    versionNo: 1,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   }
 ];
 
@@ -140,7 +155,10 @@ export const testCases: TestCaseDetail[] = [
     sqlTemplate: "select platform, play_type, operate_mode, conversion_rate from ...",
     businessRuleIds: ["br_1"],
     gitPath: "knowledge-assets/test-cases/tc_1.yaml",
-    versionNo: 2
+    versionNo: 2,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "tc_2",
@@ -163,7 +181,10 @@ export const testCases: TestCaseDetail[] = [
     sqlTemplate: "select a.biz_date, a.platform, a.channel, a.order_cnt, b.order_cnt from ...",
     businessRuleIds: ["br_2"],
     gitPath: "knowledge-assets/test-cases/tc_2.yaml",
-    versionNo: 4
+    versionNo: 4,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "tc_3",
@@ -186,7 +207,10 @@ export const testCases: TestCaseDetail[] = [
     sqlTemplate: "select biz_date, conversion_rate from ... order by biz_date",
     businessRuleIds: [],
     gitPath: "knowledge-assets/test-cases/tc_3.yaml",
-    versionNo: 3
+    versionNo: 3,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "tc_4",
@@ -209,7 +233,10 @@ export const testCases: TestCaseDetail[] = [
     sqlTemplate: "select biz_date, platform, channel, order_cnt from ...",
     businessRuleIds: ["br_2"],
     gitPath: "knowledge-assets/test-cases/tc_4.yaml",
-    versionNo: 1
+    versionNo: 1,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   }
 ];
 
@@ -227,7 +254,10 @@ export const businessRules: BusinessRuleDetail[] = [
     commonCauses: "流量分类错误、归因口径错误、样本范围异常",
     analysisHint: "优先排查 operate_mode 映射与转化归因 SQL",
     gitPath: "knowledge-assets/business-rules/br_1.yaml",
-    versionNo: 2
+    versionNo: 2,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   },
   {
     id: "br_2",
@@ -242,7 +272,10 @@ export const businessRules: BusinessRuleDetail[] = [
     commonCauses: "ETL 漏数、维度映射错误、过滤条件不一致",
     analysisHint: "对比 group by 维度与 where 条件",
     gitPath: "knowledge-assets/business-rules/br_2.yaml",
-    versionNo: 3
+    versionNo: 3,
+    createdBy: "usr_dw_1",
+    createdAt: "2026-04-15T11:00:00.000Z",
+    updatedAt: "2026-04-15T11:00:00.000Z"
   }
 ];
 

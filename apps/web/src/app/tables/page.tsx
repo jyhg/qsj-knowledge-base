@@ -2,10 +2,18 @@ import { listTableAssets } from "../../lib/api";
 import {
   formatDateTime,
   getAssetStatusLabel,
-  getRiskLabel
+  getRiskLabel,
+  resolveUserRole,
+  withUserRoleQuery
 } from "../../lib/table-first-presentation";
 
-export default async function TablesPage() {
+export default async function TablesPage({
+  searchParams
+}: {
+  searchParams?: Promise<{ role?: string | string[] }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const currentRole = resolveUserRole(resolvedSearchParams?.role);
   const tables = await listTableAssets();
 
   return (
@@ -13,7 +21,7 @@ export default async function TablesPage() {
       <section className="hero">
         <span className="eyebrow">Tables</span>
         <h1>表资产</h1>
-        <p>以表为第一入口浏览观测点、测试用例、业务规则、执行发布状态和版本信息。</p>
+        <p>以表为第一入口浏览观测点、测试用例、业务规则、执行发布状态和版本信息。进入表详情后，PM 与数仓开发都可继续维护知识资产。</p>
       </section>
 
       <section className="grid cols-3">
@@ -34,7 +42,7 @@ export default async function TablesPage() {
       <section className="panel">
         <div className="row wrap">
           <h2 className="section-title">表列表</h2>
-          <a className="button secondary" href="/manual-runs/new">
+          <a className="button secondary" href={withUserRoleQuery('/manual-runs/new', currentRole)}>
             发起验数执行
           </a>
         </div>
@@ -53,7 +61,7 @@ export default async function TablesPage() {
             {tables.map((table) => (
               <tr key={table.id}>
                 <td>
-                  <a href={`/tables/${table.id}`}>
+                  <a href={withUserRoleQuery(`/tables/${table.id}`, currentRole)}>
                     <strong>{table.tableName}</strong>
                   </a>
                   <div className="muted">{table.displayName}</div>
@@ -65,6 +73,7 @@ export default async function TablesPage() {
                 <td>
                   观测点 {table.observationPointCount} / 测试用例 {table.testCaseCount} / 业务规则{" "}
                   {table.businessRuleCount}
+                  <div className="muted">表详情页可继续新增、编辑、删除知识资产，也可进入表资产编辑页维护表级信息</div>
                 </td>
                 <td>{formatDateTime(table.lastAbnormalAt)}</td>
                 <td>{getAssetStatusLabel(table.status)}</td>
