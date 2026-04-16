@@ -6,3 +6,6 @@ coverage
 .DS_Store
 apps/api/db/*.db
 apps/api/db/*.db-journal
+apps/api/db.sqlite
+apps/api/startup.log
+test-results/
